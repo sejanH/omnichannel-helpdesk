@@ -1,0 +1,188 @@
+// Custom Design Tokens & Variables
+$primary: #6366f1;
+$primary-dark: #4f46e5;
+$secondary: #06b6d4;
+$accent: #f59e0b;
+$dark-bg: #0f172a;
+$card-bg: #1e293b;
+$border-color: #334155;
+
+// SCSS Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin glassmorphism {
+    background: rgba(30, 41, 59, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+// Global Custom Styles
+body {
+    background-color: $dark-bg;
+    color: #f8fafc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+}
+
+// Custom Scrollbar
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+    &:hover {
+        background: #475569;
+    }
+}
+
+// Glassmorphism utility
+.glass-panel {
+    @include glassmorphism;
+}
+
+// Channel Badges
+.badge-channel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &.badge-web {
+        background-color: rgba(99, 102, 241, 0.2);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+    &.badge-whatsapp {
+        background-color: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+    &.badge-email {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: #fde047;
+        border: 1px solid rgba(234, 179, 8, 0.4);
+    }
+    &.badge-facebook {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+    &.badge-telegram {
+        background-color: rgba(6, 182, 212, 0.2);
+        color: #22d3ee;
+        border: 1px solid rgba(6, 182, 212, 0.4);
+    }
+}
+
+// Priority Badges
+.badge-priority {
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &.priority-urgent {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    &.priority-high {
+        background-color: rgba(249, 115, 22, 0.2);
+        color: #fb923c;
+        border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+    &.priority-medium {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: #facc15;
+        border: 1px solid rgba(234, 179, 8, 0.4);
+    }
+    &.priority-low {
+        background-color: rgba(148, 163, 184, 0.2);
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+}
+
+// Live Chat Widget Animations
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 14px rgba(99, 102, 241, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+}
+
+.chat-widget-trigger {
+    animation: pulse-ring 2.5s infinite;
+}
+
+// Typing Indicator
+.typing-dots span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #94a3b8;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: typing-bounce 1.4s infinite ease-in-out both;
+
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+}
+
+@keyframes typing-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+// Message Bubbles
+.chat-bubble {
+    max-width: 80%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    position: relative;
+    word-break: break-word;
+
+    &.incoming {
+        background-color: #334155;
+        color: #f8fafc;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    &.outgoing {
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        color: #ffffff;
+        border-bottom-right-radius: 0.25rem;
+        margin-left: auto;
+    }
+
+    &.internal-note {
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px dashed rgba(245, 158, 11, 0.4);
+        color: #fde047;
+    }
+}
