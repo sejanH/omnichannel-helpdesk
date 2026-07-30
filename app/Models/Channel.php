@@ -27,4 +27,23 @@ class Channel extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
+    /**
+     * Get Cached Channel Config from Database
+     */
+    public static function getCachedConfig(string $type): array
+    {
+        return \Illuminate\Support\Facades\Cache::remember("channel_config_{$type}", 86400, function () use ($type) {
+            $channel = static::where('type', $type)->first();
+            return $channel?->configuration ?? [];
+        });
+    }
+
+    /**
+     * Flush Cached Channel Config
+     */
+    public static function flushChannelCache(string $type): void
+    {
+        \Illuminate\Support\Facades\Cache::forget("channel_config_{$type}");
+    }
 }

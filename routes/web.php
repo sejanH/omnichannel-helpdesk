@@ -1,13 +1,26 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OmnichannelController;
 use App\Http\Controllers\WidgetController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [OmnichannelController::class, 'dashboard'])->name('dashboard');
+Route::get('/', function () { return view('welcome'); })->name('home');
 Route::get('/demo', function () { return view('demo'); })->name('demo');
-Route::get('/tickets/{ticket}/messages', [OmnichannelController::class, 'getMessages']);
-Route::post('/tickets/{ticket}/messages', [OmnichannelController::class, 'sendMessage']);
+
+// Authentication Routes
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [OmnichannelController::class, 'dashboard'])->name('dashboard');
+    Route::get('/tickets/{ticket}/messages', [OmnichannelController::class, 'getMessages']);
+    Route::post('/tickets/{ticket}/messages', [OmnichannelController::class, 'sendMessage']);
+    Route::get('/tickets/{ticket?}', [OmnichannelController::class, 'tickets'])->name('tickets');
+});
 
 
 // Public & Admin Widget APIs
@@ -17,5 +30,14 @@ Route::prefix('api/v1/widget')->group(function () {
     Route::post('/init', [WidgetController::class, 'initSession']);
     Route::get('/messages', [WidgetController::class, 'getMessages']);
     Route::post('/messages', [WidgetController::class, 'sendMessage']);
+});
+
+// External Channel Webhooks (WhatsApp, Telegram, Facebook)
+use App\Http\Controllers\WebhookController;
+
+Route::prefix('api/v1/webhooks')->group(function () {
+    Route::match(['get', 'post'], '/whatsapp', [WebhookController::class, 'handleWhatsApp']);
+    Route::post('/telegram', [WebhookController::class, 'handleTelegram']);
+    Route::match(['get', 'post'], '/facebook', [WebhookController::class, 'handleFacebook']);
 });
 

@@ -47,11 +47,21 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    /**
+     * Get Cached User (Admin/Agent)
+     */
+    public static function getCachedUser(int $id): ?self
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return \Illuminate\Support\Facades\Cache::remember("user_{$id}", 3600, function () use ($id) {
+            return static::find($id);
+        });
+    }
+
+    /**
+     * Flush User Cache
+     */
+    public function flushUserCache(): void
+    {
+        \Illuminate\Support\Facades\Cache::forget("user_{$this->id}");
     }
 }

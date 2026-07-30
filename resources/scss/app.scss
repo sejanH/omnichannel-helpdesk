@@ -1,4 +1,6 @@
-// Custom Design Tokens & Variables
+@import "@tabler/icons-webfont/dist/tabler-icons.min.css";
+
+/* Custom Design Tokens & Variables */
 $primary: #6366f1;
 $primary-dark: #4f46e5;
 $secondary: #06b6d4;
@@ -7,7 +9,7 @@ $dark-bg: #0f172a;
 $card-bg: #1e293b;
 $border-color: #334155;
 
-// SCSS Mixins
+/* SCSS Mixins */
 @mixin flex-center {
     display: flex;
     align-items: center;
@@ -21,7 +23,7 @@ $border-color: #334155;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-// Global Custom Styles
+/* Global Custom Styles */
 body {
     background-color: $dark-bg;
     color: #f8fafc;
@@ -29,7 +31,7 @@ body {
     overflow-x: hidden;
 }
 
-// Custom Scrollbar
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -45,12 +47,12 @@ body {
     }
 }
 
-// Glassmorphism utility
+/* Glassmorphism utility */
 .glass-panel {
     @include glassmorphism;
 }
 
-// Channel Badges
+/* Channel Badges */
 .badge-channel {
     display: inline-flex;
     align-items: center;
@@ -89,7 +91,7 @@ body {
     }
 }
 
-// Priority Badges
+/* Priority Badges */
 .badge-priority {
     padding: 0.2rem 0.5rem;
     border-radius: 0.375rem;
@@ -119,7 +121,7 @@ body {
     }
 }
 
-// Live Chat Widget Animations
+/* Live Chat Widget Animations */
 @keyframes pulse-ring {
     0% {
         transform: scale(0.95);
@@ -139,7 +141,7 @@ body {
     animation: pulse-ring 2.5s infinite;
 }
 
-// Typing Indicator
+/* Typing Indicator */
 .typing-dots span {
     display: inline-block;
     width: 6px;
@@ -159,7 +161,7 @@ body {
     40% { transform: scale(1); }
 }
 
-// Message Bubbles
+/* Message Bubbles */
 .chat-bubble {
     max-width: 80%;
     padding: 0.75rem 1rem;
@@ -184,5 +186,56 @@ body {
         background: rgba(245, 158, 11, 0.15);
         border: 1px dashed rgba(245, 158, 11, 0.4);
         color: #fde047;
+    }
+}
+
+/* Sidebar Collapsible & Responsive Layout Styles */
+#main-sidebar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .sidebar-text {
+        transition: opacity 0.2s ease, max-width 0.3s ease;
+        white-space: nowrap;
+    }
+
+    &.sidebar-collapsed {
+        width: 5rem !important; /* 80px (w-20) */
+        padding-left: 0.625rem !important;
+        padding-right: 0.625rem !important;
+
+        .sidebar-text {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .brand-container {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+
+            a {
+                justify-content: center;
+            }
+        }
+
+        .nav-link-item {
+            justify-content: center;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .user-card-container {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.25rem;
+            gap: 0.5rem;
+        }
+
+        #sidebar-toggle-icon {
+            transform: rotate(180deg);
+        }
     }
 }
