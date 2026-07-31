@@ -285,6 +285,25 @@ docker exec omnidesk-app cp /var/www/html/database/database.sqlite /var/www/html
 docker compose logs -f omnidesk
 ```
 
+### Run Database Seeders inside Container:
+```bash
+# Run default database seeder
+docker exec -it omnidesk-app php artisan db:seed
+
+# Wipe and re-seed database fresh
+docker exec -it omnidesk-app php artisan migrate:fresh --seed
+```
+
+### Run `npm run build` Assets Compiler inside Container:
+```bash
+docker exec -it omnidesk-app npm run build
+```
+
+### Open Interactive Bash Shell inside Container:
+```bash
+docker exec -it omnidesk-app bash
+```
+
 ### Update Client Instance to Latest Code:
 ```bash
 git pull
