@@ -57,6 +57,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
+      - .:/var/www/html
       - omnidesk-storage:/var/www/html/storage
     depends_on:
       - mysql-db
@@ -96,7 +97,7 @@ services:
     container_name: omnidesk-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379" # Mapped to host port 6380 to avoid conflict with host Redis on 6379
     volumes:
       - redis-data:/data
 
