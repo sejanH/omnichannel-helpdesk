@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Ensure Composer dependencies exist
+if [ ! -f /var/www/html/vendor/autoload.php ]; then
+    echo "Installing Composer dependencies..."
+    composer install --no-interaction --optimize-autoloader
+fi
+
 # Ensure SQLite database file exists if using sqlite
 if [ "$DB_CONNECTION" = "sqlite" ]; then
     mkdir -p /var/www/html/database
