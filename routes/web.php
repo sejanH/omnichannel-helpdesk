@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () { return view('welcome'); })->name('home');
 Route::get('/demo', function () { return view('demo'); })->name('demo');
 
+use App\Http\Controllers\DocsController;
+Route::get('/docs/{page?}', [DocsController::class, 'show'])->where('page', '.*')->name('docs.show');
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -25,6 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/tickets/{ticket}/messages', [OmnichannelController::class, 'sendMessage']);
     Route::get('/tickets/{ticket?}', [OmnichannelController::class, 'tickets'])->name('tickets');
     Route::patch('/tickets/{ticket}/resolve', [OmnichannelController::class, 'resolveTicket'])->name('tickets.resolve');
+    Route::patch('/tickets/{ticket}/assign', [OmnichannelController::class, 'assignAgent'])->name('tickets.assign');
 
     // Agent & CRM User Management Routes
     Route::get('/agents', [AgentController::class, 'index'])->name('agents.index');

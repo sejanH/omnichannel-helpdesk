@@ -37,11 +37,19 @@
             </a>
 
             <a href="{{ route('tickets') }}" id="nav-workspace" title="All Tickets"
-                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('tickets') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('tickets') && request()->query('filter') !== 'mine' ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
                 <x-icon name="ticket" class="text-xl shrink-0" />
                 <span class="sidebar-text">All Tickets</span>
                 <span id="open-ticket-count"
                     class="sidebar-text ml-auto bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{{ \App\Models\Ticket::where('status', 'open')->count() }}</span>
+            </a>
+
+            <a href="{{ route('tickets') }}?filter=mine" id="nav-my-tickets" title="My Assigned Tickets"
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->query('filter') === 'mine' ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
+                <x-icon name="user-check" class="text-xl shrink-0 text-cyan-400" />
+                <span class="sidebar-text">My Tickets</span>
+                <span id="my-ticket-count"
+                    class="sidebar-text ml-auto bg-cyan-500/20 text-cyan-400 text-xs px-2 py-0.5 rounded-full font-bold border border-cyan-500/30">{{ \App\Models\Ticket::where('assigned_agent_id', auth()->id())->whereIn('status', ['open', 'in_progress', 'pending'])->count() }}</span>
             </a>
 
             <a href="{{ route('agents.index') }}" title="Agent Roster"
@@ -64,7 +72,7 @@
                 <span class="sidebar-text">Live Client Demo</span>
             </a>
 
-            <a href="{{ url('/docs/README.md') }}" target="_blank" title="Documentation"
+            <a href="{{ route('docs.show') }}" title="Documentation"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition text-left">
                 <x-icon name="book" class="text-xl shrink-0" />
                 <span class="sidebar-text">Documentation</span>

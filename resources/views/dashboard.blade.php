@@ -83,7 +83,7 @@
                     </div>
                 </a>
 
-                <a href="{{ url('/docs/README.md') }}" target="_blank" class="block p-4 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500 transition group">
+                <a href="{{ route('docs.show') }}" class="block p-4 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500 transition group">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition">
                             <x-icon name="book" class="text-2xl" />

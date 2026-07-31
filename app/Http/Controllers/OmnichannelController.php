@@ -136,4 +136,38 @@ class OmnichannelController extends Controller
 
         return response()->json(['success' => true, 'ticket' => $ticket, 'message' => $message]);
     }
+
+    /**
+     * Assign ticket to an agent
+     */
+    public function assignAgent(Request $request, Ticket $ticket)
+    {
+        $request->validate([
+            'assigned_agent_id' => 'nullable|exists:users,id',
+        ]);
+
+        $agentId = $request->input('assigned_agent_id');
+        $agent = $agentId ? User::find($agentId) : null;
+
+        $ticket->update([
+            'assigned_agent_id' => $agentId,
+        ]);
+
+        $assignedName = $agent ? $agent->name : 'Unassigned';
+        $message = Message::create([
+            'ticket_id' => $ticket->id,
+            'sender_type' => 'system',
+            'sender_name' => 'System',
+            'content' => 'Ticket assigned to ' . $assignedName . ' by ' . (auth()->user()?->name ?? 'Admin'),
+            'is_internal_note' => true,
+        ]);
+
+        broadcast(new MessageSent($message))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'ticket' => $ticket->load(['assignedAgent']),
+            'message' => $message
+        ]);
+    }
 }

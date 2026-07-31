@@ -20,6 +20,7 @@
                         class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
                     <select id="filter-tickets" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
                         <option value="all">All Conversations</option>
+                        <option value="mine">Assigned to Me</option>
                         <option value="unread">Unread / New</option>
                         <option value="open">Open / In Progress</option>
                         <option value="resolved">Resolved / Closed</option>
@@ -29,9 +30,10 @@
                 <!-- Tickets Stream -->
                 <div id="tickets-list" class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
                     @forelse($tickets as $ticket)
-                        <div class="ticket-card p-4 hover:bg-slate-800/40 cursor-pointer transition border-l-4 {{ $loop->first ? 'border-indigo-500 bg-slate-800/30' : 'border-transparent' }}"
+                        <div class="ticket-card p-4 hover:bg-slate-800/40 cursor-pointer transition border-l-4 border-transparent"
                             data-ticket-id="{{ $ticket->id }}"
                             data-status="{{ $ticket->status }}"
+                            data-assigned-id="{{ $ticket->assigned_agent_id }}"
                             data-unread="{{ $ticket->unread_messages_count > 0 ? 'true' : 'false' }}">
                             <div class="flex items-center justify-between mb-1.5">
                                 <span class="badge-channel badge-{{ $ticket->channel->type ?? 'web' }}">
@@ -49,13 +51,13 @@
                                 </div>
                             </div>
                             <h3 class="font-semibold text-sm text-slate-200 line-clamp-1 mb-1">{{ $ticket->subject }}</h3>
-                            <p class="text-xs text-slate-400 line-clamp-1 mb-2">
+                            <p class="ticket-snippet-text text-xs text-slate-400 line-clamp-1 mb-2">
                                 {{ $ticket->latestMessage->content ?? 'No messages yet.' }}
                             </p>
                             <div class="flex items-center justify-between text-xs text-slate-500">
                                 <span
                                     class="font-medium text-slate-400">{{ $ticket->contact->name ?? 'Unknown Contact' }}</span>
-                                <span>{{ $ticket->updated_at->diffForHumans() }}</span>
+                                <span class="ticket-time-text">{{ $ticket->updated_at->diffForHumans() }}</span>
                             </div>
                         </div>
                     @empty
@@ -91,6 +93,15 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 mr-2">
+                            <span class="text-xs text-slate-400 font-medium hidden sm:inline">Assignee:</span>
+                            <select id="assign-agent-select" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                                <option value="">Unassigned</option>
+                                @foreach($agents as $agent)
+                                    <option value="{{ $agent->id }}">{{ $agent->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <button id="btn-mark-resolved"
                             class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/30 transition">
                             Mark Resolved
@@ -409,6 +420,39 @@
     <script type="module">
         $(document).ready(function () {
             let activeTicketId = null;
+            let currentEchoChannel = null;
+
+            // Global Echo Listener for Workspace Sidebar & Live Ticket Updates
+            if (window.Echo) {
+                window.Echo.channel('omnichannel-dashboard')
+                    .listen('.message.sent', function (e) {
+                        const msg = e.message;
+                        if (!msg) return;
+
+                        // 1. Update snippet text and timestamp in left sidebar ticket list
+                        const card = $('.ticket-card[data-ticket-id="' + msg.ticket_id + '"]');
+                        if (card.length > 0) {
+                            card.find('.ticket-snippet-text').text(msg.content);
+                            card.find('.ticket-time-text').text('Just now');
+
+                            // If message belongs to an unselected ticket, mark as unread in sidebar
+                            if (String(msg.ticket_id) !== String(activeTicketId)) {
+                                card.attr('data-unread', 'true');
+                                if (card.find('.unread-badge').length === 0) {
+                                    card.find('.badge-priority').before('<span class="unread-badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-rose-500/20">New</span>');
+                                }
+                            }
+                        }
+
+                        // 2. Only append message to main chat window IF it matches the active ticket!
+                        if (String(msg.ticket_id) === String(activeTicketId)) {
+                            if (msg.id && $('#msg-bubble-' + msg.id).length === 0) {
+                                $('#messages-container').append(renderMessageBubble(msg));
+                                scrollToBottom();
+                            }
+                        }
+                    });
+            }
 
             // View Switching Navigation
             $('#nav-tickets').on('click', function () {
@@ -426,12 +470,23 @@
                 loadWidgetConfig();
             });
 
+            // Restore Filter & Search state from URL query parameters on page load
+            const currentUrl = new URL(window.location.href);
+            const initFilter = currentUrl.searchParams.get('filter');
+            const initSearch = currentUrl.searchParams.get('search');
+
+            if (initFilter) $('#filter-tickets').val(initFilter);
+            if (initSearch) $('#search-tickets').val(initSearch);
+
             // Handle Ticket Selection
             $(document).on('click', '.ticket-card', function (e) {
-                // If it was a real click (not triggered programmatically), update URL
+                const ticketId = $(this).data('ticket-id');
+
+                // If it was a real click (not triggered programmatically), update URL preserving query params
                 if (e.originalEvent) {
-                    const ticketId = $(this).data('ticket-id');
-                    window.history.pushState({}, '', '/tickets/' + ticketId);
+                    const url = new URL(window.location.href);
+                    url.pathname = '/tickets/' + ticketId;
+                    window.history.pushState({}, '', url.pathname + url.search);
                 }
                 
                 $('.ticket-card').removeClass('border-indigo-500 bg-slate-800/30').addClass('border-transparent');
@@ -441,23 +496,44 @@
                 $(this).attr('data-unread', 'false');
                 $(this).find('.unread-badge').fadeOut(300, function() { $(this).remove(); });
 
-                activeTicketId = $(this).data('ticket-id');
+                activeTicketId = ticketId;
                 loadTicketMessages(activeTicketId);
             });
 
-            // Client-side Search & Filtering Logic
-            $('#search-tickets, #filter-tickets').on('input change', function () {
-                const searchTerm = $('#search-tickets').val().toLowerCase();
+            // Client-side Search & Filtering Logic with URL State Sync
+            const currentUserId = {{ Auth::id() ?? 0 }};
+
+            function applyFilteringAndSyncUrl() {
+                const searchTerm = $('#search-tickets').val().toLowerCase().trim();
                 const filterVal = $('#filter-tickets').val();
 
+                // 1. Sync filter and search state into URL query params
+                const url = new URL(window.location.href);
+                if (filterVal && filterVal !== 'all') {
+                    url.searchParams.set('filter', filterVal);
+                } else {
+                    url.searchParams.delete('filter');
+                }
+
+                if (searchTerm) {
+                    url.searchParams.set('search', searchTerm);
+                } else {
+                    url.searchParams.delete('search');
+                }
+
+                window.history.replaceState({}, '', url.pathname + url.search);
+
+                // 2. Filter sidebar ticket cards
                 $('.ticket-card').each(function () {
                     const textContent = $(this).text().toLowerCase();
                     const status = $(this).data('status');
-                    const isUnread = $(this).attr('data-unread') === 'true'; // use attr to pick up dynamic updates
+                    const assignedId = $(this).attr('data-assigned-id');
+                    const isUnread = $(this).attr('data-unread') === 'true';
 
                     let matchesSearch = textContent.includes(searchTerm);
                     let matchesFilter = true;
 
+                    if (filterVal === 'mine' && String(assignedId) !== String(currentUserId)) matchesFilter = false;
                     if (filterVal === 'unread' && !isUnread) matchesFilter = false;
                     if (filterVal === 'open' && !['open', 'in_progress', 'pending'].includes(status)) matchesFilter = false;
                     if (filterVal === 'resolved' && !['resolved', 'closed'].includes(status)) matchesFilter = false;
@@ -468,7 +544,34 @@
                         $(this).hide();
                     }
                 });
+            }
+
+            $('#search-tickets, #filter-tickets').on('input change', function () {
+                applyFilteringAndSyncUrl();
             });
+
+            // Handle Agent Ticket Assignment Change
+            $('#assign-agent-select').on('change', function () {
+                if (!activeTicketId) return;
+                const agentId = $(this).val();
+
+                $.ajax({
+                    url: '/tickets/' + activeTicketId + '/assign',
+                    method: 'PATCH',
+                    data: {
+                        assigned_agent_id: agentId,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function (res) {
+                        // Update attribute on sidebar card
+                        $('.ticket-card[data-ticket-id="' + activeTicketId + '"]').attr('data-assigned-id', agentId || '');
+                        applyFilteringAndSyncUrl();
+                    }
+                });
+            });
+
+            // Initial filtering execution on load
+            applyFilteringAndSyncUrl();
 
             // Load Ticket Messages via AJAX
             function loadTicketMessages(ticketId) {
@@ -479,6 +582,7 @@
                     $('#active-ticket-number').text('#' + data.ticket.ticket_number);
                     $('#active-contact-name').text(data.ticket.contact ? data.ticket.contact.name : 'Customer');
                     $('#active-channel-name').text(data.ticket.channel ? data.ticket.channel.name : 'Channel');
+                    $('#assign-agent-select').val(data.ticket.assigned_agent_id || '');
 
                     let messagesHtml = '';
                     data.messages.forEach(function (msg) {
@@ -488,12 +592,22 @@
                     $('#messages-container').html(messagesHtml);
                     scrollToBottom();
 
-                    // Real-time Echo WebSockets
+                    // Real-time Echo WebSockets (Leave previous ticket channel to prevent cross-ticket leakage)
                     if (window.Echo) {
-                        window.Echo.channel('ticket.' + ticketId)
+                        if (currentEchoChannel && currentEchoChannel !== ('ticket.' + ticketId)) {
+                            window.Echo.leave(currentEchoChannel);
+                        }
+                        currentEchoChannel = 'ticket.' + ticketId;
+
+                        window.Echo.channel(currentEchoChannel)
                             .listen('.message.sent', function (e) {
-                                $('#messages-container').append(renderMessageBubble(e.message));
-                                scrollToBottom();
+                                // Strictly verify that message belongs to current active ticket
+                                if (e.message && String(e.message.ticket_id) === String(activeTicketId)) {
+                                    if ($('#msg-bubble-' + e.message.id).length === 0) {
+                                        $('#messages-container').append(renderMessageBubble(e.message));
+                                        scrollToBottom();
+                                    }
+                                }
                             });
                     }
                 });
@@ -508,7 +622,7 @@
                 let bubbleClass = isInternal ? 'internal-note w-full' : alignmentClass;
 
                 return `
-                    <div class="flex flex-col mb-3">
+                    <div id="msg-bubble-${msg.id || Date.now()}" class="flex flex-col mb-3">
                         <div class="flex items-center gap-2 mb-1 text-xs text-slate-400 ${isAgent ? 'justify-end' : ''}">
                             <span class="font-semibold text-slate-300">${msg.sender_name}</span>
                             <span>•</span>
@@ -691,20 +805,12 @@
                 });
             });
 
-            // Auto-select active ticket or first ticket on load
+            // Auto-select active ticket ONLY if explicitly specified in URL path (e.g. /tickets/15)
             const activeTicketIdFromServer = {{ (isset($activeTicket) && $activeTicket && $activeTicket->id) ? $activeTicket->id : 'null' }};
             if (activeTicketIdFromServer) {
                 const targetTicket = $('.ticket-card[data-ticket-id="' + activeTicketIdFromServer + '"]');
                 if (targetTicket.length) {
                     targetTicket.click();
-                }
-            } else {
-                const firstTicket = $('.ticket-card').first();
-                if (firstTicket.length) {
-                    // Update URL for the first selected ticket if it wasn't specified in URL
-                    const firstId = firstTicket.data('ticket-id');
-                    window.history.replaceState({}, '', '/tickets/' + firstId);
-                    firstTicket.click();
                 }
             }
         });
