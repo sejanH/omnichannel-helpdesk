@@ -35,7 +35,7 @@
         position: 'bottom-right',
         title: 'Customer Support',
         subtitle: 'We typically reply in under 5 minutes',
-        welcome_message: '👋 Hello! How can our support team help you today?',
+        welcome_message: '',
         logo_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk',
         theme: 'dark',
         launcher_icon: 'chat',
@@ -47,9 +47,12 @@
     let ticketId = localStorage.getItem('omni_ticket_id') || null;
     let visitorName = localStorage.getItem('omni_visitor_name') || '';
     let visitorEmail = localStorage.getItem('omni_visitor_email') || '';
+    let visitorPhone = localStorage.getItem('omni_visitor_phone') || '';
     let unreadCount = 0;
     let pollInterval = null;
     let knownMessageIds = new Set();
+    let reverbConfig = null;
+    let wsConnection = null;
 
     // Fetch Widget Configuration
     fetch(`${baseUrl}/api/v1/widget/config?channel_id=${channelId}`)
@@ -57,6 +60,9 @@
         .then(data => {
             if (data.configuration) {
                 config = Object.assign({}, config, data.configuration);
+            }
+            if (data.reverb) {
+                reverbConfig = data.reverb;
             }
             initWidgetUI();
         })
@@ -368,7 +374,7 @@
         closeBtn.addEventListener('click', toggleChat);
 
         // Check pre-chat or initialize directly
-        if (config.require_prechat && (!visitorName || !visitorEmail)) {
+        if (!visitorName || (!visitorEmail && !visitorPhone)) {
             renderPreChatForm();
         } else {
             renderChatInterface();
@@ -395,14 +401,20 @@
         const contentArea = document.getElementById('omni-widget-content');
         contentArea.innerHTML = `
             <form class="omni-prechat-form" id="omni-form-prechat">
-                <div style="text-align:center; font-size:13px; font-weight:600; margin-bottom:6px;">Start a Conversation</div>
+                <div style="text-align:center; font-size:13px; font-weight:600; margin-bottom:4px;">Start a Conversation</div>
+                <div style="text-align:center; font-size:11px; color:#94a3b8; margin-bottom:6px;">Provide your name & at least one contact method</div>
+                <div id="omni-prechat-error" style="display:none; color:#f87171; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); padding:8px; border-radius:8px; font-size:11px; text-align:center;"></div>
                 <div class="omni-field">
-                    <label class="omni-label">Your Name</label>
+                    <label class="omni-label">Your Name *</label>
                     <input type="text" id="omni-input-name" class="omni-input" placeholder="e.g. Alex Smith" required>
                 </div>
                 <div class="omni-field">
-                    <label class="omni-label">Your Email</label>
-                    <input type="email" id="omni-input-email" class="omni-input" placeholder="alex@example.com" required>
+                    <label class="omni-label">Email Address</label>
+                    <input type="email" id="omni-input-email" class="omni-input" placeholder="alex@example.com">
+                </div>
+                <div class="omni-field">
+                    <label class="omni-label">Phone Number</label>
+                    <input type="tel" id="omni-input-phone" class="omni-input" placeholder="+1 234 567 8900">
                 </div>
                 <button type="submit" class="omni-submit-btn">Start Chat</button>
             </form>
@@ -410,11 +422,22 @@
 
         document.getElementById('omni-form-prechat').addEventListener('submit', function (e) {
             e.preventDefault();
+            const errBox = document.getElementById('omni-prechat-error');
+            errBox.style.display = 'none';
+
             visitorName = document.getElementById('omni-input-name').value.trim();
             visitorEmail = document.getElementById('omni-input-email').value.trim();
+            visitorPhone = document.getElementById('omni-input-phone').value.trim();
+
+            if (!visitorEmail && !visitorPhone) {
+                errBox.textContent = 'Please provide either an Email address or a Phone number so we can reach you.';
+                errBox.style.display = 'block';
+                return;
+            }
 
             localStorage.setItem('omni_visitor_name', visitorName);
             localStorage.setItem('omni_visitor_email', visitorEmail);
+            localStorage.setItem('omni_visitor_phone', visitorPhone);
 
             renderChatInterface();
             ensureSession();
@@ -478,7 +501,8 @@
                 channel_id: channelId,
                 session_token: sessionToken,
                 name: visitorName,
-                email: visitorEmail
+                email: visitorEmail,
+                phone: visitorPhone
             })
         })
         .then(res => res.json())
@@ -497,10 +521,89 @@
                         appendMessage(msg);
                     });
                 }
-                startPolling();
+                startRealtimeOrPolling();
             }
         })
         .catch(err => console.error('[OmniDesk] Session initialization error:', err));
+    }
+
+    function startRealtimeOrPolling() {
+        const wsStarted = initRealtimeWebSocket();
+        if (!wsStarted) {
+            startPolling();
+        }
+    }
+
+    function initRealtimeWebSocket() {
+        if (!ticketId || !reverbConfig || !reverbConfig.key) return false;
+
+        try {
+            const isTls = reverbConfig.scheme === 'https';
+            const wsProtocol = isTls ? 'wss://' : 'ws://';
+            const wsHost = reverbConfig.host || window.location.hostname;
+            const wsPort = reverbConfig.port ? `:${reverbConfig.port}` : '';
+            const wsUrl = `${wsProtocol}${wsHost}${wsPort}/app/${reverbConfig.key}?protocol=7&client=js&version=8.4.0&flash=false`;
+
+            if (wsConnection) {
+                try { wsConnection.close(); } catch (e) {}
+            }
+
+            wsConnection = new WebSocket(wsUrl);
+
+            wsConnection.onopen = function () {
+                console.log('[OmniDesk Widget] Connected to Laravel Reverb WebSockets!');
+                if (pollInterval) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                }
+
+                // Subscribe to Pusher/Reverb ticket channel
+                wsConnection.send(JSON.stringify({
+                    event: 'pusher:subscribe',
+                    data: { channel: `ticket.${ticketId}` }
+                }));
+            };
+
+            wsConnection.onmessage = function (evt) {
+                try {
+                    const parsed = JSON.parse(evt.data);
+                    if (parsed.event === 'message.sent' || parsed.event === '.message.sent') {
+                        let payload = typeof parsed.data === 'string' ? JSON.parse(parsed.data) : parsed.data;
+                        const msg = payload.message || payload;
+                        if (msg && msg.id && !knownMessageIds.has(msg.id)) {
+                            knownMessageIds.add(msg.id);
+                            appendMessage(msg);
+
+                            if (msg.sender_type === 'agent' && !isOpen) {
+                                unreadCount++;
+                                const badge = document.getElementById('omni-widget-badge');
+                                if (badge) {
+                                    badge.textContent = unreadCount;
+                                    badge.style.display = 'flex';
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('[OmniDesk Widget] Error parsing WS event:', e);
+                }
+            };
+
+            wsConnection.onerror = function (err) {
+                console.warn('[OmniDesk Widget] WebSocket error, falling back to polling:', err);
+                startPolling();
+            };
+
+            wsConnection.onclose = function () {
+                console.warn('[OmniDesk Widget] WebSocket closed, falling back to polling.');
+                startPolling();
+            };
+
+            return true;
+        } catch (e) {
+            console.error('[OmniDesk Widget] WebSocket initialization failed:', e);
+            return false;
+        }
     }
 
     function startPolling() {

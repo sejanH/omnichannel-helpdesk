@@ -23,9 +23,6 @@
 
         <!-- Messages Stream -->
         <div id="widget-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
-            <div class="chat-bubble incoming">
-                👋 Hello! How can our support team help you today?
-            </div>
         </div>
 
         <!-- Input Footer -->

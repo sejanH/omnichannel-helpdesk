@@ -41,3 +41,13 @@ Route::prefix('api/v1/webhooks')->group(function () {
     Route::match(['get', 'post'], '/facebook', [WebhookController::class, 'handleFacebook']);
 });
 
+// Error Pages Preview Route
+Route::get('/errors/{code?}', function ($code = '404') {
+    $validCodes = ['400', '401', '403', '404', '419', '429', '4xx', '500', '502', '503', '504', '5xx'];
+    if (!in_array($code, $validCodes)) {
+        $code = '404';
+    }
+    return response()->view("errors.{$code}", [], (int) (is_numeric($code) ? $code : 500));
+})->name('errors.preview');
+
+

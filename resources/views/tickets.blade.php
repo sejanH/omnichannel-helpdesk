@@ -29,9 +29,16 @@
                                 <span class="badge-channel badge-{{ $ticket->channel->type ?? 'web' }}">
                                     {{ $ticket->channel->name ?? 'Web' }}
                                 </span>
-                                <span class="badge-priority priority-{{ $ticket->priority }}">
-                                    {{ $ticket->priority }}
-                                </span>
+                                <div class="flex items-center gap-1.5">
+                                    @if($ticket->unread_messages_count > 0)
+                                        <span class="unread-badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
+                                            {{ $ticket->unread_messages_count }} New
+                                        </span>
+                                    @endif
+                                    <span class="badge-priority priority-{{ $ticket->priority }}">
+                                        {{ $ticket->priority }}
+                                    </span>
+                                </div>
                             </div>
                             <h3 class="font-semibold text-sm text-slate-200 line-clamp-1 mb-1">{{ $ticket->subject }}</h3>
                             <p class="text-xs text-slate-400 line-clamp-1 mb-2">
@@ -243,8 +250,8 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Welcome Message /
                             Greeting</label>
-                        <textarea id="cfg-welcome" rows="2"
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">👋 Hello! How can our support team help you today?</textarea>
+                        <textarea id="cfg-welcome" rows="2" placeholder="Optional greeting message..."
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
                     </div>
 
                     <!-- Logo / Avatar URL -->
@@ -422,6 +429,9 @@
                 $('.ticket-card').removeClass('border-indigo-500 bg-slate-800/30').addClass('border-transparent');
                 $(this).removeClass('border-transparent').addClass('border-indigo-500 bg-slate-800/30');
 
+                // Hide unread badge when clicked
+                $(this).find('.unread-badge').fadeOut(300, function() { $(this).remove(); });
+
                 activeTicketId = $(this).data('ticket-id');
                 loadTicketMessages(activeTicketId);
             });
@@ -523,7 +533,7 @@
                         $(`input[name="position"][value="${cfg.position || 'bottom-right'}"]`).prop('checked', true);
                         $('#cfg-title').val(cfg.title || 'Customer Support');
                         $('#cfg-subtitle').val(cfg.subtitle || 'We typically reply in under 5 minutes');
-                        $('#cfg-welcome').val(cfg.welcome_message || '👋 Hello! How can our support team help you today?');
+                        $('#cfg-welcome').val(cfg.welcome_message || '');
                         $('#cfg-logo').val(cfg.logo_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk');
                         $('#cfg-theme').val(cfg.theme || 'dark');
                         $('#cfg-icon').val(cfg.launcher_icon || 'chat');

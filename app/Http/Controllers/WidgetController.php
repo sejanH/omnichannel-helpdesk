@@ -39,7 +39,7 @@ class WidgetController extends Controller
             'position' => 'bottom-right',
             'title' => 'Customer Support',
             'subtitle' => 'We typically reply in under 5 minutes',
-            'welcome_message' => '👋 Hello! How can our support team help you today?',
+            'welcome_message' => '',
             'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk',
             'theme' => 'dark',
             'launcher_icon' => 'chat',
@@ -51,6 +51,12 @@ class WidgetController extends Controller
             'channel_name' => $channel->name,
             'is_active' => (bool)$channel->is_active,
             'configuration' => $config,
+            'reverb' => [
+                'key' => env('REVERB_APP_KEY', env('VITE_REVERB_APP_KEY')),
+                'host' => env('REVERB_HOST', env('VITE_REVERB_HOST', request()->getHost())),
+                'port' => (int) env('REVERB_PORT', env('VITE_REVERB_PORT', 8080)),
+                'scheme' => env('REVERB_SCHEME', env('VITE_REVERB_SCHEME', 'http')),
+            ],
         ]);
     }
 
@@ -105,6 +111,7 @@ class WidgetController extends Controller
             'session_token' => 'nullable|string',
             'name' => 'nullable|string|max:100',
             'email' => 'nullable|email|max:100',
+            'phone' => 'nullable|string|max:50',
         ]);
 
         $channelId = $request->input('channel_id');
@@ -115,23 +122,76 @@ class WidgetController extends Controller
         }
 
         $sessionToken = $request->input('session_token') ?: 'vis_' . Str::random(32);
-        $name = $request->input('name') ?: 'Guest ' . rand(1000, 9999);
-        $email = $request->input('email');
+        $name = trim($request->input('name') ?: '');
+        $email = strtolower(trim($request->input('email') ?: ''));
+        $phone = preg_replace('/[^0-9+]/', '', $request->input('phone') ?: '');
 
-        // Find or create Contact
+        if (empty($email) && empty($phone) && empty($request->input('session_token'))) {
+            return response()->json([
+                'error' => 'Either an email address or a phone number must be provided to start a chat session.'
+            ], 422);
+        }
+
+        // Multi-Anchor Priority Contact Resolver
         $contact = null;
-        if ($email) {
+
+        // 1. Primary Lookup: Match by Email
+        if (!empty($email)) {
             $contact = Contact::where('email', $email)->first();
         }
 
+        // 2. Secondary Lookup: Match by Phone (E.164 formatted)
+        if (!$contact && !empty($phone)) {
+            $contact = Contact::where('phone', $phone)->first();
+        }
+
+        // 3. Tertiary Lookup: Match by Widget Session Token
+        if (!$contact && !empty($sessionToken)) {
+            $contact = Contact::whereJsonContains('external_ids->widget_session', $sessionToken)->first();
+        }
+
         if (!$contact) {
+            // Create New Contact Profile
+            $contactName = !empty($name) ? $name : 'Guest ' . rand(1000, 9999);
+            $contactEmail = !empty($email) ? $email : 'visitor_' . Str::random(8) . '@widget.guest';
+
             $contact = Contact::create([
-                'name' => $name,
-                'email' => $email ?: 'visitor_' . Str::random(8) . '@widget.guest',
-                'avatar' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($name),
-                'notes' => 'Created via Live Chat Widget',
+                'name' => $contactName,
+                'email' => $contactEmail,
+                'phone' => !empty($phone) ? $phone : null,
+                'avatar' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($contactName),
+                'notes' => 'Created via Web Live Chat Widget',
                 'external_ids' => ['widget_session' => $sessionToken],
             ]);
+        } else {
+            // Update & merge missing fields into existing Contact profile
+            $updates = [];
+
+            // Fill missing phone
+            if (!empty($phone) && empty($contact->phone)) {
+                $updates['phone'] = $phone;
+            }
+
+            // Fill missing/guest placeholder email
+            if (!empty($email) && (empty($contact->email) || str_ends_with($contact->email, '@widget.guest'))) {
+                $updates['email'] = $email;
+            }
+
+            // Upgrade generic Guest name if a real name was provided
+            if (!empty($name) && (empty($contact->name) || str_starts_with($contact->name, 'Guest'))) {
+                $updates['name'] = $name;
+            }
+
+            // Sync session token into external_ids JSON
+            $externalIds = $contact->external_ids ?? [];
+            if (empty($externalIds['widget_session']) || $externalIds['widget_session'] !== $sessionToken) {
+                $externalIds['widget_session'] = $sessionToken;
+                $updates['external_ids'] = $externalIds;
+            }
+
+            if (!empty($updates)) {
+                $contact->update($updates);
+            }
         }
 
         // Find active open/in_progress ticket for this contact & channel
@@ -152,18 +212,6 @@ class WidgetController extends Controller
                 'contact_id' => $contact->id,
                 'last_activity_at' => now(),
             ]);
-
-            // Add welcome message if new ticket
-            $welcomeMsg = $channel->configuration['welcome_message'] ?? '👋 Hello! How can our support team help you today?';
-            if (!empty($welcomeMsg)) {
-                Message::create([
-                    'ticket_id' => $ticket->id,
-                    'sender_type' => 'system',
-                    'sender_name' => $channel->configuration['title'] ?? 'Support Team',
-                    'content' => $welcomeMsg,
-                    'created_at' => now(),
-                ]);
-            }
         }
 
         $messages = Message::where('ticket_id', $ticket->id)

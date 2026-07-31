@@ -40,6 +40,9 @@ class OmnichannelController extends Controller
     public function tickets(?Ticket $ticket = null)
     {
         $tickets = Ticket::with(['channel', 'contact', 'latestMessage', 'assignedAgent'])
+            ->withCount(['messages as unread_messages_count' => function ($query) {
+                $query->whereNull('read_at')->where('sender_type', 'customer');
+            }])
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -58,6 +61,10 @@ class OmnichannelController extends Controller
     public function getMessages(Ticket $ticket)
     {
         $ticket->load(['channel', 'contact', 'assignedAgent']);
+        
+        // Mark unread customer messages as read
+        $ticket->messages()->whereNull('read_at')->where('sender_type', 'customer')->update(['read_at' => now()]);
+
         $messages = $ticket->messages()->orderBy('created_at', 'asc')->get();
 
         return response()->json([
@@ -97,18 +104,8 @@ class OmnichannelController extends Controller
             $channelType = strtolower($ticket->channel->type ?? '');
             $contact = $ticket->contact;
 
-            if ($channelType === 'whatsapp' && $contact && $contact->phone) {
-                app(\App\Services\WhatsAppService::class)->sendMessage($contact->phone, $message->content);
-            } elseif ($channelType === 'telegram' && $contact) {
-                $chatId = str_replace('telegram:', '', $contact->notes);
-                if (!empty($chatId)) {
-                    app(\App\Services\TelegramService::class)->sendMessage($chatId, $message->content);
-                }
-            } elseif ($channelType === 'facebook' && $contact) {
-                $psid = str_replace('facebook:', '', $contact->notes);
-                if (!empty($psid)) {
-                    app(\App\Services\FacebookService::class)->sendMessage($psid, $message->content);
-                }
+            if ($contact && in_array($channelType, ['whatsapp', 'telegram', 'facebook'])) {
+                \App\Jobs\SendExternalMessageJob::dispatch($message, $channelType, $contact);
             }
         }
 
