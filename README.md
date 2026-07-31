@@ -47,6 +47,7 @@ Comprehensive feature guides and technical specifications are available in the [
 - 💬 [**Embeddable Live Chat Widget**](./docs/live-chat-widget.md): Embedding, styling parameters, pre-chat forms, and visitor session initialization.
 - 🌐 [**Omnichannel Integrations**](./docs/channel-integrations.md): WhatsApp, Email, Facebook, and Telegram channel schemas and webhooks.
 - 🔌 [**API Reference**](./docs/api-reference.md): Public Widget API endpoints (`/api/v1/widget/*`) and Agent Ticket endpoints.
+- 🐳 [**Docker & VPS Deployment Guide**](./docs/deployment.md): Deploy single-tenant client instances on any VPS via Docker Compose with Nginx, PHP 8.3 FPM, Reverb WebSockets, and Redis.
 
 ---
 
@@ -98,6 +99,46 @@ Ensure your system has the following installed:
 6. **Access the Application**:
    - 🖥️ **Agent Workspace Dashboard**: [http://localhost:8000](http://localhost:8000)
    - 💬 **Live Chat Widget Demo Page**: [http://localhost:8000/demo](http://localhost:8000/demo)
+
+---
+
+## 🐳 Docker & Single-Tenant VPS Deployment
+
+Deploying dedicated OmniDesk client instances to any VPS (DigitalOcean, Hetzner, AWS EC2) takes **one command**:
+
+```bash
+# 1. Clone repo on Client VPS
+git clone https://github.com/your-username/omnichannel-helpdesk.git client-instance
+cd client-instance
+
+# 2. Build & Launch Container Stack
+docker compose up -d --build
+```
+
+The stack automatically provisions:
+- **Nginx** + **PHP 8.3 FPM** (Web server on port `9880`)
+- **Laravel Reverb** (Real-Time WebSocket server on port `9881`)
+- **MySQL 8.0** (Containerized database on port `3306`)
+- **phpMyAdmin** (Database GUI manager on port `9882`)
+- **Redis Alpine** (In-memory session, cache, and queue store)
+- **Laravel Queue Worker** & **Task Scheduler** (`php artisan schedule:work`)
+
+### Client Production Domain & SSL Environment Configuration:
+Before launching a client instance in production over HTTPS, customize the domain variables in `docker-compose.yml`:
+
+```yaml
+    environment:
+      # 1. Main Application HTTPS URL
+      APP_NAME: "Acme Support"
+      APP_URL: "https://support.acmecorp.com" # Or https://client1.sejan.dev
+
+      # 2. Browser WebSocket Connection Settings (WSS over Port 443)
+      VITE_REVERB_HOST: "support.acmecorp.com" # Your client's domain
+      VITE_REVERB_PORT: "443"                  # Reverse Proxy HTTPS Port
+      VITE_REVERB_SCHEME: "https"              # Enables secure wss:// connections
+```
+
+For complete reverse proxy configuration files, read the [**Docker & VPS Deployment Guide**](./docs/deployment.md).
 
 ---
 

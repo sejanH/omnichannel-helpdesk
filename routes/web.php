@@ -16,6 +16,8 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WidgetBuilderController;
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [OmnichannelController::class, 'dashboard'])->name('dashboard');
@@ -29,6 +31,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/agents', [AgentController::class, 'store'])->name('agents.store');
     Route::post('/agents/{agent}/toggle', [AgentController::class, 'toggleStatus'])->name('agents.toggle');
     Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
+
+    // Logged in User Profile Routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/status', [ProfileController::class, 'updateStatus'])->name('profile.status');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Multi-Widget Builder Studio Routes
+    Route::get('/widget-builder', [WidgetBuilderController::class, 'index'])->name('widget-builder.index');
+    Route::post('/widget-builder', [WidgetBuilderController::class, 'store'])->name('widget-builder.store');
+    Route::put('/widget-builder/{channel}', [WidgetBuilderController::class, 'update'])->name('widget-builder.update');
+    Route::delete('/widget-builder/{channel}', [WidgetBuilderController::class, 'destroy'])->name('widget-builder.destroy');
 });
 
 

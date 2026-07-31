@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  omnidesk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omnidesk-app
+    restart: unless-stopped
+    ports:
+      - "9880:9880" # Web Application Dashboard & Widget APIs (Uncommon Port)
+      - "9881:9881" # Real-Time Reverb WebSocket Server (Uncommon Port)
+    environment:
+      # --- CLIENT ENVIRONMENT & DOMAIN SETTINGS ---
+      # For production over SSL reverse proxy, set APP_URL to your HTTPS domain:
+      # e.g., APP_URL: "https://client1.sejan.dev" or "https://support.acmecorp.com"
+      APP_NAME: "OmniDesk Helpdesk"
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      APP_URL: "http://localhost:9880"
+      
+      # --- MYSQL DATABASE CONFIGURATION ---
+      DB_CONNECTION: "mysql"
+      DB_HOST: "mysql-db"
+      DB_PORT: "3306"
+      DB_DATABASE: "omnidesk_db"
+      DB_USERNAME: "omnidesk_user"
+      DB_PASSWORD: "secret_db_password"
+
+      # --- HIGH-CONCURRENCY DRIVERS ---
+      SESSION_DRIVER: "redis"
+      QUEUE_CONNECTION: "redis"
+      CACHE_STORE: "redis"
+
+      # Redis Settings
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+
+      # --- BROADCASTING & REVERB WEBSOCKETS ---
+      BROADCAST_CONNECTION: "reverb"
+      REVERB_APP_ID: "298795"
+      REVERB_APP_KEY: "bq4kweky886lkzul4zr1"
+      REVERB_APP_SECRET: "dxvrgy1mzjd6ixoyy5lr"
+      REVERB_HOST: "0.0.0.0"
+      REVERB_PORT: "9881"
+      REVERB_SCHEME: "http"
+
+      # --- VITE BROWSER WEBSOCKET SETTINGS ---
+      # For production over HTTPS reverse proxy, set:
+      # VITE_REVERB_HOST: "client1.sejan.dev"
+      # VITE_REVERB_PORT: "443"
+      # VITE_REVERB_SCHEME: "https"
+      VITE_REVERB_APP_KEY: "bq4kweky886lkzul4zr1"
+      VITE_REVERB_HOST: "localhost"
+      VITE_REVERB_PORT: "9881"
+      VITE_REVERB_SCHEME: "http"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - omnidesk-storage:/var/www/html/storage
+    depends_on:
+      - mysql-db
+      - redis
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: omnidesk-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: "omnidesk_db"
+      MYSQL_USER: "omnidesk_user"
+      MYSQL_PASSWORD: "secret_db_password"
+      MYSQL_ROOT_PASSWORD: "root_secret_password"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: omnidesk-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "9882:80" # phpMyAdmin Web Interface (Uncommon Port)
+    environment:
+      PMA_HOST: "mysql-db"
+      PMA_PORT: "3306"
+      PMA_USER: "omnidesk_user"
+      PMA_PASSWORD: "secret_db_password"
+      UPLOAD_LIMIT: "64M"
+    depends_on:
+      - mysql-db
+
+  redis:
+    image: redis:alpine
+    container_name: omnidesk-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  omnidesk-storage:
+  mysql-data:
+  redis-data:

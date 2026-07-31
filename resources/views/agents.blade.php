@@ -73,6 +73,8 @@
                 <select name="status" onchange="this.form.submit()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
                     <option value="">All Statuses</option>
                     <option value="online" {{ request('status') === 'online' ? 'selected' : '' }}>Online</option>
+                    <option value="away" {{ request('status') === 'away' ? 'selected' : '' }}>Away</option>
+                    <option value="busy" {{ request('status') === 'busy' ? 'selected' : '' }}>Busy / DND</option>
                     <option value="offline" {{ request('status') === 'offline' ? 'selected' : '' }}>Offline</option>
                     <option value="disabled" {{ request('status') === 'disabled' ? 'selected' : '' }}>Deactivated / Disabled</option>
                 </select>
@@ -93,12 +95,17 @@
                 </thead>
                 <tbody class="divide-y divide-slate-800/60">
                     @forelse($agents as $agent)
-                        <tr class="hover:bg-slate-800/30 transition">
+                        <tr class="hover:bg-slate-800/30 transition {{ auth()->id() === $agent->id ? 'bg-indigo-950/15' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
                                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($agent->name) }}" alt="Avatar" class="w-9 h-9 rounded-full border border-slate-700">
                                     <div>
-                                        <div class="font-bold text-slate-100">{{ $agent->name }}</div>
+                                        <div class="font-bold text-slate-100 flex items-center gap-2">
+                                            <span>{{ $agent->name }}</span>
+                                            @if(auth()->id() === $agent->id)
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">You</span>
+                                            @endif
+                                        </div>
                                         <div class="text-[11px] text-slate-400">{{ $agent->email }}</div>
                                     </div>
                                 </div>
@@ -119,6 +126,16 @@
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                         <span>Online Active</span>
                                     </span>
+                                @elseif($agent->status === 'away')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <span>Away</span>
+                                    </span>
+                                @elseif($agent->status === 'busy')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span>Busy / DND</span>
+                                    </span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
                                         <span class="w-2 h-2 rounded-full bg-slate-500"></span>
@@ -134,29 +151,33 @@
                             </td>
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <!-- Toggle Account Status / Instant Session Invalidation -->
-                                    <form action="{{ route('agents.toggle', $agent) }}" method="POST">
-                                        @csrf
-                                        @if($agent->status === 'disabled' || $agent->status === 'inactive')
-                                            <button type="submit" title="Reactivate Account" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/30 transition">
-                                                <i class="ti ti-user-check mr-1"></i> Reactivate
-                                            </button>
-                                        @else
-                                            <button type="submit" onclick="return confirm('Are you sure you want to deactivate {{ $agent->name }}? All active sessions and remember-me tokens will be invalidated instantly!')" title="Deactivate & Invalidate Session" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition">
-                                                <i class="ti ti-user-off mr-1"></i> Deactivate
-                                            </button>
-                                        @endif
-                                    </form>
+                                    @if(auth()->id() === $agent->id)
+                                        <a href="{{ route('profile.edit') }}" title="Edit My Profile & Status" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 transition flex items-center gap-1">
+                                            <i class="ti ti-user-cog"></i> Profile & Status
+                                        </a>
+                                    @else
+                                        <!-- Toggle Account Status / Instant Session Invalidation -->
+                                        <form action="{{ route('agents.toggle', $agent) }}" method="POST">
+                                            @csrf
+                                            @if($agent->status === 'disabled' || $agent->status === 'inactive')
+                                                <button type="submit" title="Reactivate Account" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/30 transition">
+                                                    <i class="ti ti-user-check mr-1"></i> Reactivate
+                                                </button>
+                                            @else
+                                                <button type="submit" onclick="return confirm('Are you sure you want to deactivate {{ $agent->name }}? All active sessions and remember-me tokens will be invalidated instantly!')" title="Deactivate & Invalidate Session" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition">
+                                                    <i class="ti ti-user-off mr-1"></i> Deactivate
+                                                </button>
+                                            @endif
+                                        </form>
 
-                                    <!-- Delete Agent Account -->
-                                    @if(auth()->id() !== $agent->id)
-                                    <form action="{{ route('agents.destroy', $agent) }}" method="POST" onsubmit="return confirm('Permanently delete {{ $agent->name }}?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition">
-                                            <i class="ti ti-trash text-sm"></i>
-                                        </button>
-                                    </form>
+                                        <!-- Delete Agent Account -->
+                                        <form action="{{ route('agents.destroy', $agent) }}" method="POST" onsubmit="return confirm('Permanently delete {{ $agent->name }}?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition">
+                                                <i class="ti ti-trash text-sm"></i>
+                                            </button>
+                                        </form>
                                     @endif
                                 </div>
                             </td>

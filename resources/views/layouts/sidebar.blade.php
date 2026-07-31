@@ -50,13 +50,13 @@
                 <span class="sidebar-text">Agent Roster</span>
             </a>
 
-            <button type="button" id="nav-widget-config" title="Widget Builder"
-                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition text-left cursor-pointer">
+            <a href="{{ route('widget-builder.index') }}" title="Widget Builder Studio"
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('widget-builder.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
                 <x-icon name="adjustments-horizontal" class="text-xl shrink-0" />
                 <span class="sidebar-text">Widget Builder</span>
                 <span
                     class="sidebar-text ml-auto text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">NEW</span>
-            </button>
+            </a>
 
             <a href="{{ route('demo') }}" target="_blank" title="Live Client Demo"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition text-left">
@@ -73,26 +73,52 @@
     </div>
 
     <!-- Active Agent Card & Logout -->
-    <div class="user-card-container glass-panel p-3 rounded-xl flex items-center justify-between gap-3 transition-all duration-300">
-        <div class="flex items-center gap-3 overflow-hidden">
-            <div class="relative shrink-0" title="{{ auth()->user()->name ?? 'Sarah Connor' }}">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode(auth()->user()->name ?? 'Sarah') }}" alt="Agent Avatar"
-                    class="w-10 h-10 rounded-full border border-indigo-500/50">
-                <span
-                    class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+    @auth
+    @php
+        $currentStatus = auth()->user()->status ?? 'online';
+        $statusDotClass = match($currentStatus) {
+            'online' => 'bg-emerald-500',
+            'away' => 'bg-amber-500',
+            'busy' => 'bg-rose-500',
+            default => 'bg-slate-500',
+        };
+        $statusTextClass = match($currentStatus) {
+            'online' => 'text-emerald-400',
+            'away' => 'text-amber-400',
+            'busy' => 'text-rose-400',
+            default => 'text-slate-400',
+        };
+    @endphp
+    <div class="user-card-container glass-panel p-3 rounded-xl flex items-center justify-between gap-3 transition-all duration-300 relative group/usercard">
+        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 overflow-hidden flex-1 group/userinfo" title="Manage Profile & Status">
+            <div class="relative shrink-0">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode(auth()->user()->name) }}" alt="Agent Avatar"
+                    class="w-10 h-10 rounded-full border border-indigo-500/50 group-hover/userinfo:border-indigo-400 transition">
+                <span class="absolute bottom-0 right-0 w-3 h-3 {{ $statusDotClass }} rounded-full border-2 border-slate-900 shadow"></span>
             </div>
             <div class="sidebar-text overflow-hidden">
-                <div class="font-semibold text-sm truncate text-slate-200">{{ auth()->user()->name ?? 'Sarah Connor' }}</div>
-                <div class="text-xs text-emerald-400 font-medium">Online ({{ ucfirst(auth()->user()->role ?? 'Agent') }})</div>
+                <div class="font-semibold text-sm truncate text-slate-200 group-hover/userinfo:text-indigo-300 transition">{{ auth()->user()->name }}</div>
+                <div class="text-[11px] font-medium flex items-center gap-1.5 {{ $statusTextClass }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $statusDotClass }}"></span>
+                    <span class="capitalize">{{ $currentStatus }}</span>
+                    <span class="text-slate-500">•</span>
+                    <span class="text-slate-400 text-[10px] uppercase font-bold">{{ auth()->user()->role }}</span>
+                </div>
             </div>
+        </a>
+        <div class="flex items-center gap-1 shrink-0">
+            <a href="{{ route('profile.edit') }}" title="Profile & Password Settings" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition">
+                <x-icon name="settings" class="text-lg" />
+            </a>
+            <form action="{{ route('logout') }}" method="POST" class="shrink-0">
+                @csrf
+                <button type="submit" title="Log Out" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition cursor-pointer">
+                    <x-icon name="logout" class="text-lg" />
+                </button>
+            </form>
         </div>
-        <form action="{{ route('logout') }}" method="POST" class="shrink-0">
-            @csrf
-            <button type="submit" title="Log Out" class="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition cursor-pointer">
-                <x-icon name="logout" class="text-xl" />
-            </button>
-        </form>
     </div>
+    @endauth
 </aside>
 
 <script>
