@@ -17,7 +17,7 @@ services:
       APP_NAME: "OmniDesk Helpdesk"
       APP_ENV: "production"
       APP_DEBUG: "false"
-      APP_URL: "http://localhost:9880"
+      APP_URL: "https://support.sejan.dev"
       
       # --- MYSQL DATABASE CONFIGURATION ---
       DB_CONNECTION: "mysql"
@@ -51,9 +51,9 @@ services:
       # VITE_REVERB_PORT: "443"
       # VITE_REVERB_SCHEME: "https"
       VITE_REVERB_APP_KEY: "bq4kweky886lkzul4zr1"
-      VITE_REVERB_HOST: "localhost"
-      VITE_REVERB_PORT: "9881"
-      VITE_REVERB_SCHEME: "http"
+      VITE_REVERB_HOST: "support.sejan.dev"
+      VITE_REVERB_PORT: "443"
+      VITE_REVERB_SCHEME: "https"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
