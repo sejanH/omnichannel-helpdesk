@@ -15,11 +15,20 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+use App\Http\Controllers\AgentController;
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [OmnichannelController::class, 'dashboard'])->name('dashboard');
     Route::get('/tickets/{ticket}/messages', [OmnichannelController::class, 'getMessages']);
     Route::post('/tickets/{ticket}/messages', [OmnichannelController::class, 'sendMessage']);
     Route::get('/tickets/{ticket?}', [OmnichannelController::class, 'tickets'])->name('tickets');
+    Route::patch('/tickets/{ticket}/resolve', [OmnichannelController::class, 'resolveTicket'])->name('tickets.resolve');
+
+    // Agent & CRM User Management Routes
+    Route::get('/agents', [AgentController::class, 'index'])->name('agents.index');
+    Route::post('/agents', [AgentController::class, 'store'])->name('agents.store');
+    Route::post('/agents/{agent}/toggle', [AgentController::class, 'toggleStatus'])->name('agents.toggle');
+    Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
 });
 
 

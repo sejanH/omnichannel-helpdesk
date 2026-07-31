@@ -31,12 +31,26 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // Check if user exists and is disabled
+        $existingUser = User::where('email', $request->email)->first();
+        if ($existingUser && ($existingUser->status === 'disabled' || $existingUser->status === 'inactive')) {
+            return back()->withErrors([
+                'email' => 'Your account has been deactivated. Please contact your administrator.'
+            ])->onlyInput('email');
+        }
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            if (Auth::user()->status === 'disabled' || Auth::user()->status === 'inactive') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Your account has been deactivated. Please contact your administrator.'
+                ])->onlyInput('email');
+            }
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
 
-        // Fallback demo login if database user exists or first user fallback
+        // Fallback demo login if first user fallback
         $user = User::where('email', $request->email)->first();
         if (!$user) {
             $user = User::first() ?? User::create([
@@ -46,6 +60,12 @@ class AuthController extends Controller
                 'role' => 'agent',
                 'status' => 'online',
             ]);
+        }
+
+        if ($user->status === 'disabled' || $user->status === 'inactive') {
+            return back()->withErrors([
+                'email' => 'Your account has been deactivated. Please contact your administrator.'
+            ])->onlyInput('email');
         }
 
         Auth::login($user, $request->boolean('remember', true));

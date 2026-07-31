@@ -113,4 +113,27 @@ class OmnichannelController extends Controller
 
         return response()->json(['success' => true, 'message' => $message]);
     }
+
+    /**
+     * Resolve a ticket
+     */
+    public function resolveTicket(Ticket $ticket)
+    {
+        $ticket->update([
+            'status' => 'resolved',
+            'resolved_at' => now(),
+        ]);
+
+        $message = Message::create([
+            'ticket_id' => $ticket->id,
+            'sender_type' => 'system',
+            'sender_name' => 'System',
+            'content' => 'Ticket marked as resolved by ' . (auth()->user()?->name ?? 'Agent'),
+            'is_internal_note' => true,
+        ]);
+        
+        broadcast(new MessageSent($message))->toOthers();
+
+        return response()->json(['success' => true, 'ticket' => $ticket, 'message' => $message]);
+    }
 }

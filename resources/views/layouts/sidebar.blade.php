@@ -44,6 +44,12 @@
                     class="sidebar-text ml-auto bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{{ \App\Models\Ticket::where('status', 'open')->count() }}</span>
             </a>
 
+            <a href="{{ route('agents.index') }}" title="Agent Roster"
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('agents.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
+                <x-icon name="users-group" class="text-xl shrink-0" />
+                <span class="sidebar-text">Agent Roster</span>
+            </a>
+
             <button type="button" id="nav-widget-config" title="Widget Builder"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition text-left cursor-pointer">
                 <x-icon name="adjustments-horizontal" class="text-xl shrink-0" />

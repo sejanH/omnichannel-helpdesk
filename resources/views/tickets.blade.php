@@ -18,13 +18,21 @@
                     </div>
                     <input type="text" id="search-tickets" placeholder="Search customer, ticket # or text..."
                         class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                    <select id="filter-tickets" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                        <option value="all">All Conversations</option>
+                        <option value="unread">Unread / New</option>
+                        <option value="open">Open / In Progress</option>
+                        <option value="resolved">Resolved / Closed</option>
+                    </select>
                 </div>
 
                 <!-- Tickets Stream -->
                 <div id="tickets-list" class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
                     @forelse($tickets as $ticket)
                         <div class="ticket-card p-4 hover:bg-slate-800/40 cursor-pointer transition border-l-4 {{ $loop->first ? 'border-indigo-500 bg-slate-800/30' : 'border-transparent' }}"
-                            data-ticket-id="{{ $ticket->id }}">
+                            data-ticket-id="{{ $ticket->id }}"
+                            data-status="{{ $ticket->status }}"
+                            data-unread="{{ $ticket->unread_messages_count > 0 ? 'true' : 'false' }}">
                             <div class="flex items-center justify-between mb-1.5">
                                 <span class="badge-channel badge-{{ $ticket->channel->type ?? 'web' }}">
                                     {{ $ticket->channel->name ?? 'Web' }}
@@ -83,7 +91,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button
+                        <button id="btn-mark-resolved"
                             class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/30 transition">
                             Mark Resolved
                         </button>
@@ -429,11 +437,37 @@
                 $('.ticket-card').removeClass('border-indigo-500 bg-slate-800/30').addClass('border-transparent');
                 $(this).removeClass('border-transparent').addClass('border-indigo-500 bg-slate-800/30');
 
-                // Hide unread badge when clicked
+                // Hide unread badge when clicked and update data attribute
+                $(this).attr('data-unread', 'false');
                 $(this).find('.unread-badge').fadeOut(300, function() { $(this).remove(); });
 
                 activeTicketId = $(this).data('ticket-id');
                 loadTicketMessages(activeTicketId);
+            });
+
+            // Client-side Search & Filtering Logic
+            $('#search-tickets, #filter-tickets').on('input change', function () {
+                const searchTerm = $('#search-tickets').val().toLowerCase();
+                const filterVal = $('#filter-tickets').val();
+
+                $('.ticket-card').each(function () {
+                    const textContent = $(this).text().toLowerCase();
+                    const status = $(this).data('status');
+                    const isUnread = $(this).attr('data-unread') === 'true'; // use attr to pick up dynamic updates
+
+                    let matchesSearch = textContent.includes(searchTerm);
+                    let matchesFilter = true;
+
+                    if (filterVal === 'unread' && !isUnread) matchesFilter = false;
+                    if (filterVal === 'open' && !['open', 'in_progress', 'pending'].includes(status)) matchesFilter = false;
+                    if (filterVal === 'resolved' && !['resolved', 'closed'].includes(status)) matchesFilter = false;
+
+                    if (matchesSearch && matchesFilter) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
             });
 
             // Load Ticket Messages via AJAX
@@ -518,6 +552,31 @@
                         $('#message-input').val('');
                         $('#messages-container').append(renderMessageBubble(response.message));
                         scrollToBottom();
+                    }
+                });
+            });
+
+            // Mark Ticket as Resolved
+            $('#btn-mark-resolved').on('click', function () {
+                if (!activeTicketId) return;
+
+                $.ajax({
+                    url: '/tickets/' + activeTicketId + '/resolve',
+                    type: 'PATCH',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (response) {
+                        $('#messages-container').append(renderMessageBubble(response.message));
+                        scrollToBottom();
+                        
+                        // Update ticket card UI
+                        const card = $('.ticket-card[data-ticket-id="' + activeTicketId + '"]');
+                        card.attr('data-status', 'resolved');
+                        // Show visual indicator in list
+                        if (card.find('.resolved-label').length === 0) {
+                            card.find('.badge-priority').after('<span class="resolved-label ml-1 text-[9px] uppercase font-bold text-emerald-500">Resolved</span>');
+                        }
                     }
                 });
             });
