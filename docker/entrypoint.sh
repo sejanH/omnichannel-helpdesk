@@ -7,6 +7,16 @@ if [ ! -f /var/www/html/vendor/autoload.php ]; then
     composer install --no-interaction --optimize-autoloader
 fi
 
+# Ensure .env file exists for Laravel console commands
+if [ ! -f /var/www/html/.env ]; then
+    echo "Creating .env file from .env.example..."
+    if [ -f /var/www/html/.env.example ]; then
+        cp /var/www/html/.env.example /var/www/html/.env
+    else
+        touch /var/www/html/.env
+    fi
+fi
+
 # Ensure SQLite database file exists if using sqlite
 if [ "$DB_CONNECTION" = "sqlite" ]; then
     mkdir -p /var/www/html/database
@@ -36,7 +46,7 @@ mkdir -p /var/www/html/storage/logs
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Generate APP_KEY if not already set
+# Generate APP_KEY if not already set or empty in .env
 if [ -z "$APP_KEY" ]; then
     echo "Generating application key..."
     php artisan key:generate --force
