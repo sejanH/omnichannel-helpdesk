@@ -67,7 +67,7 @@ services:
     container_name: omnidesk-mysql
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "3307:3306" # Mapped to host port 3307 to avoid conflict with host MySQL on 3306
     environment:
       MYSQL_DATABASE: "omnidesk_db"
       MYSQL_USER: "omnidesk_user"
