@@ -13,7 +13,7 @@
                         <h2 class="font-bold text-base text-slate-100">Conversations</h2>
                         <span
                             class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Reverb Active
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Sync Active
                         </span>
                     </div>
                     <input type="text" id="search-tickets" placeholder="Search customer, ticket # or text..."

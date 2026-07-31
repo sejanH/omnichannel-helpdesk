@@ -7,6 +7,12 @@ if [ ! -f /var/www/html/vendor/autoload.php ]; then
     composer install --no-interaction --optimize-autoloader
 fi
 
+# Ensure NPM dependencies exist for Vite asset compilation
+if [ ! -d /var/www/html/node_modules ]; then
+    echo "Installing NPM dependencies..."
+    npm install
+fi
+
 # Ensure .env file exists for Laravel console commands
 if [ ! -f /var/www/html/.env ]; then
     echo "Creating .env file from .env.example..."
@@ -40,11 +46,14 @@ if [ "$DB_CONNECTION" = "mysql" ]; then
     echo "MySQL connection established successfully!"
 fi
 
-# Generate APP_KEY if not already set or empty in .env
-if [ -z "$APP_KEY" ]; then
-    echo "Generating application key..."
+# Generate unique APP_KEY if missing in .env
+if ! grep -q "^APP_KEY=base64:" /var/www/html/.env 2>/dev/null; then
+    echo "Generating unique application key for client instance..."
     php artisan key:generate --force
 fi
+
+# Export APP_KEY into shell environment so config:cache picks it up
+export APP_KEY=$(grep "^APP_KEY=" /var/www/html/.env | cut -d '=' -f2)
 
 # Create storage symlink
 php artisan storage:link --force || true

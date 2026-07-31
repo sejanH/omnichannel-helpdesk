@@ -174,6 +174,26 @@
                 transform: translateY(0) scale(1);
                 pointer-events: auto;
             }
+            @media (max-width: 640px) {
+                #omni-widget-box {
+                    top: 0 !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100vw !important;
+                    max-width: 100vw !important;
+                    height: 100vh !important;
+                    max-height: 100vh !important;
+                    border-radius: 0 !important;
+                    border: none !important;
+                }
+                #omni-widget-launcher {
+                    bottom: 16px !important;
+                    right: 16px !important;
+                    width: 54px !important;
+                    height: 54px !important;
+                }
+            }
             .omni-header {
                 background: linear-gradient(135deg, ${config.widget_color}, ${adjustColor(config.widget_color, -30)});
                 padding: 16px;
@@ -372,6 +392,13 @@
         
         launcher.addEventListener('click', toggleChat);
         closeBtn.addEventListener('click', toggleChat);
+
+        // Global JavaScript API
+        window.OmniDeskWidget = {
+            toggle: toggleChat,
+            open: function () { if (!isOpen) toggleChat(); },
+            close: function () { if (isOpen) toggleChat(); }
+        };
 
         // Check pre-chat or initialize directly
         if (!visitorName || (!visitorEmail && !visitorPhone)) {

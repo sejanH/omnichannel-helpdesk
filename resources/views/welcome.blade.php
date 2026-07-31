@@ -100,12 +100,19 @@
             </p>
 
             <!-- Hero Buttons -->
-            <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
-                <a href="{{ route('register') }}" class="px-8 py-4 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+            <div class="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4 px-2">
+                <a href="{{ route('register') }}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                     <span>Start 14-Day Free Trial</span>
                     <x-icon name="arrow-right" class="text-xs" />
                 </a>
-                <a href="{{ route('dashboard') }}" class="px-8 py-4 rounded-xl text-sm font-bold text-slate-200 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition flex items-center gap-2">
+
+                <button onclick="if(window.OmniDeskWidget){window.OmniDeskWidget.open();}else{alert('Live Chat Widget Initializing...');}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl text-sm font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 hover:bg-cyan-900 hover:border-cyan-400 shadow-xl shadow-cyan-950/40 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <x-icon name="message-circle" class="text-base text-cyan-400" />
+                    <span>Test Live Chat With Us</span>
+                </button>
+
+                <a href="{{ route('dashboard') }}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl text-sm font-bold text-slate-200 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition flex items-center justify-center gap-2">
                     <x-icon name="device-desktop" class="text-base text-indigo-400" />
                     <span>Launch Agent Dashboard</span>
                 </a>
@@ -135,7 +142,7 @@
                                 <span class="ml-2 text-xs font-mono text-slate-400">OmniDesk Agent Workspace — Active Ticket #TCK-1002</span>
                             </div>
                             <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Reverb WebSocket Active
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Real-Time Engine Active
                             </span>
                         </div>
                         <!-- Mockup Inbox Grid -->
@@ -259,7 +266,7 @@
                         <x-icon name="bell" class="text-2xl text-purple-400" />
                     </div>
                     <h3 class="text-xl font-bold text-white mb-2">Real-Time WebSocket Engine</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Powered by Laravel Echo & Broadcasting. New messages and ticket updates stream instantly without page refreshes.</p>
+                    <p class="text-slate-400 text-sm leading-relaxed">Powered by high-performance WebSocket technology. New messages and ticket updates stream instantly without page refreshes.</p>
                 </div>
 
                 <!-- Feature 6 -->
@@ -429,7 +436,7 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-xs text-slate-400 leading-relaxed">
-                        Embedding takes under 2 minutes! Copy the generated single-line `<script>` tag from your Admin Dashboard and paste it right before the closing `</body>` tag on WordPress, Shopify, Next.js, Laravel, or any custom website.
+                        Embedding takes under 2 minutes! Copy the generated single-line `<script>` tag from your Admin Dashboard and paste it right before the closing `</body>` tag on WordPress, Shopify, React, Vue, Webflow, or any custom website.
                     </p>
                 </details>
 
@@ -610,5 +617,8 @@
             }
         }
     </script>
+
+    <!-- OmniDesk Live Chat Widget Script Tag -->
+    <script src="{{ url('/widget.js') }}" data-channel-id="1" async></script>
 </body>
 </html>
