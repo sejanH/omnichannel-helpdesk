@@ -17,6 +17,7 @@ services:
       APP_NAME: "OmniDesk Helpdesk"
       APP_ENV: "production"
       APP_DEBUG: "false"
+      APP_KEY: "base64:BTmQdMs+eyGSt6BE8uHtNzXjOLcQNGevCmmNFThJ0JI="
       APP_URL: "https://support.sejan.dev"
       
       # --- MYSQL DATABASE CONFIGURATION ---

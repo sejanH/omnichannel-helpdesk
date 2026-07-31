@@ -40,12 +40,6 @@ if [ "$DB_CONNECTION" = "mysql" ]; then
     echo "MySQL connection established successfully!"
 fi
 
-# Ensure storage directories exist and have proper permissions for Nginx & PHP-FPM
-mkdir -p /var/www/html/storage/framework/{cache,sessions,views}
-mkdir -p /var/www/html/storage/logs
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
 # Generate APP_KEY if not already set or empty in .env
 if [ -z "$APP_KEY" ]; then
     echo "Generating application key..."
@@ -60,11 +54,20 @@ echo "Running database migrations & seeders..."
 php artisan migrate --force
 php artisan db:seed --force
 
-# Optimize Laravel cache for production
+# Clear old cached config & re-cache for production
 echo "Caching Laravel configuration & routes..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+
+# Ensure storage directories exist and have proper permissions for Nginx & PHP-FPM
+mkdir -p /var/www/html/storage/framework/{cache,sessions,views}
+mkdir -p /var/www/html/storage/logs
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 echo "OmniDesk Application (Nginx + PHP-FPM + MySQL + Reverb) is ready! Starting Supervisor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
