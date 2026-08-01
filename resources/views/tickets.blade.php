@@ -135,7 +135,7 @@
                         @csrf
                         <div class="relative">
                             <textarea id="message-input" rows="3"
-                                placeholder="Type your response here... (or type internal note)"
+                                placeholder="Type your response... (Press Enter to send, Shift+Enter or Ctrl/Cmd+Enter for new line)"
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
                         </div>
                         <div class="flex items-center justify-between">
@@ -144,11 +144,16 @@
                                     class="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500">
                                 Internal Note (Only visible to agents)
                             </label>
-                            <button type="submit"
-                                class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
-                                <span>Send Reply</span>
-                                <x-icon name="send" class="text-sm" />
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] text-slate-500 hidden md:inline">
+                                    Press <kbd class="px-1 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-400 font-mono text-[9px]">Enter</kbd> to send, <kbd class="px-1 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-400 font-mono text-[9px]">Shift+Enter</kbd> for new line
+                                </span>
+                                <button type="submit"
+                                    class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+                                    <span>Send Reply</span>
+                                    <x-icon name="send" class="text-sm" />
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -644,6 +649,17 @@
             $(document).on('click', '.btn-canned', function () {
                 const content = $(this).data('content');
                 $('#message-input').val(content);
+            });
+
+            // Handle Keyboard Shortcuts for Textarea: Enter to Send, Shift/Ctrl/Cmd+Enter for Newline
+            $('#message-input').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                        return; // Allow native multiline newline insertion
+                    }
+                    e.preventDefault();
+                    $('#message-form').submit();
+                }
             });
 
             // Send Message Form Submit
