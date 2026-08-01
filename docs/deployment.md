@@ -309,3 +309,33 @@ docker exec -it omnidesk-app bash
 git pull
 docker compose up -d --build
 ```
+
+---
+
+## 9. Built-in Stripe Subscription Billing Setup
+
+OmniDesk includes a built-in Stripe Subscription Billing engine accessible at `/billing`.
+
+### Available Tiers:
+- **Starter Plan**: $49/mo (3 Support Agents, 2 Outlets)
+- **Pro Business Plan**: $149/mo (10 Support Agents, 10 Outlets, WhatsApp & Reverb WebSockets)
+- **Enterprise Plan**: $299/mo (50 Support Agents, 50 Outlets, Priority SLA)
+
+### Configuring Stripe API Keys:
+Add your Stripe keys to `.env` or `docker-compose.yml`:
+```env
+STRIPE_KEY=pk_live_your_stripe_publishable_key
+STRIPE_SECRET=sk_live_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
+```
+
+### Setting up Stripe Webhooks:
+In your Stripe Dashboard -> **Developers -> Webhooks**:
+- **Endpoint URL**: `https://support.yourdomain.com/stripe/webhook`
+- **Events to Listen for**:
+  - `invoice.payment_succeeded`
+  - `invoice.payment_failed`
+  - `customer.subscription.created`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+

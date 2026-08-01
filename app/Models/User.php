@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -27,11 +26,6 @@ class User extends Authenticatable
         'status',
     ];
 
-    public function assignedTickets()
-    {
-        return $this->hasMany(Ticket::class, 'assigned_agent_id');
-    }
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -42,13 +36,68 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function assignedTickets()
+    {
+        return $this->hasMany(Ticket::class, 'assigned_agent_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(BillingInvoice::class)->orderBy('created_at', 'desc');
+    }
+
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Dedicated Workspace Subscription Relation
      */
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class, 'user_id');
+    }
+
     /**
-     * Get Cached User (Admin/Agent)
+     * Get or Auto-Create Workspace Subscription
+     */
+    public function getOrProvisionSubscription(): Subscription
+    {
+        $sub = $this->subscription;
+        if (!$sub) {
+            $sub = Subscription::create([
+                'user_id' => $this->id,
+                'subscription_status' => 'trialing',
+                'subscription_plan' => 'pro',
+                'trial_ends_at' => now()->addDays(14),
+                'max_agent_seats' => 10,
+                'max_channels' => 10,
+            ]);
+        }
+        return $sub;
+    }
+
+    /**
+     * Convenience Proxy Helpers
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->getOrProvisionSubscription()->isActive();
+    }
+
+    public function onTrial(): bool
+    {
+        return $this->getOrProvisionSubscription()->onTrial();
+    }
+
+    public function daysLeftOnTrial(): int
+    {
+        return $this->getOrProvisionSubscription()->daysLeftOnTrial();
+    }
+
+    public function getPlanDetails(): array
+    {
+        return $this->getOrProvisionSubscription()->getPlanDetails();
+    }
+
+    /**
+     * Get Cached User
      */
     public static function getCachedUser(int $id): ?self
     {

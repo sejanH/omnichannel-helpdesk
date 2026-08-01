@@ -19,6 +19,7 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WidgetBuilderController;
 
@@ -29,6 +30,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/tickets/{ticket?}', [OmnichannelController::class, 'tickets'])->name('tickets');
     Route::patch('/tickets/{ticket}/resolve', [OmnichannelController::class, 'resolveTicket'])->name('tickets.resolve');
     Route::patch('/tickets/{ticket}/assign', [OmnichannelController::class, 'assignAgent'])->name('tickets.assign');
+
+    // Subscription & Billing Routes
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/plan', [BillingController::class, 'updatePlan'])->name('billing.plan.update');
+    Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+    Route::post('/billing/resume', [BillingController::class, 'resume'])->name('billing.resume');
+    Route::post('/billing/verify-license', [BillingController::class, 'verifyLicense'])->name('billing.verify_license');
 
     // Agent & CRM User Management Routes
     Route::get('/agents', [AgentController::class, 'index'])->name('agents.index');
@@ -48,6 +56,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/widget-builder/{channel}', [WidgetBuilderController::class, 'update'])->name('widget-builder.update');
     Route::delete('/widget-builder/{channel}', [WidgetBuilderController::class, 'destroy'])->name('widget-builder.destroy');
 });
+
+// Stripe Webhook Endpoint (Exempt from CSRF)
+Route::post('/stripe/webhook', [BillingController::class, 'stripeWebhook'])->name('stripe.webhook');
 
 
 // Public & Admin Widget APIs

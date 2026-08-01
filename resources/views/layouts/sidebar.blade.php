@@ -66,6 +66,15 @@
                     class="sidebar-text ml-auto text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">NEW</span>
             </a>
 
+            <a href="{{ route('billing.index') }}" title="Subscription & Billing"
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('billing.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
+                <x-icon name="credit-card" class="text-xl shrink-0 text-emerald-400" />
+                <span class="sidebar-text">Billing & Plan</span>
+                @if(auth()->check() && auth()->user()->onTrial())
+                    <span class="sidebar-text ml-auto text-[10px] bg-amber-500/20 text-amber-400 font-bold px-1.5 py-0.5 rounded border border-amber-500/30">TRIAL</span>
+                @endif
+            </a>
+
             <a href="{{ route('demo') }}" target="_blank" title="Live Client Demo"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition text-left">
                 <x-icon name="eye" class="text-xl text-cyan-400 shrink-0" />

@@ -50,64 +50,29 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard');
         }
 
-        // Fallback demo login if first user fallback
-        $user = User::where('email', $request->email)->first();
-        if (!$user) {
-            $user = User::first() ?? User::create([
-                'name' => 'Demo User',
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'agent',
-                'status' => 'online',
-            ]);
-        }
-
-        if ($user->status === 'disabled' || $user->status === 'inactive') {
-            return back()->withErrors([
-                'email' => 'Your account has been deactivated. Please contact your administrator.'
-            ])->onlyInput('email');
-        }
-
-        Auth::login($user, $request->boolean('remember', true));
-        $request->session()->regenerate();
-
-        return redirect()->route('dashboard');
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.'
+        ])->onlyInput('email');
     }
 
     /**
-     * Show Registration Form
+     * Show Registration Form (Disabled for security)
      */
     public function showRegister()
     {
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
-
-        return view('auth.register');
+        return redirect()->route('login')->withErrors([
+            'email' => 'Public self-registration is disabled on this private helpdesk instance. Please contact your administrator to create your support agent account.'
+        ]);
     }
 
     /**
-     * Process Registration Request
+     * Process Registration Request (Disabled for security)
      */
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+        return redirect()->route('login')->withErrors([
+            'email' => 'Public self-registration is disabled on this private helpdesk instance.'
         ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'agent',
-            'status' => 'online',
-        ]);
-
-        Auth::login($user);
-
-        return redirect()->route('dashboard');
     }
 
     /**

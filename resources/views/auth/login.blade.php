@@ -32,9 +32,8 @@
                     <span class="block text-[11px] text-slate-400 font-medium leading-none">Omnichannel Platform</span>
                 </div>
             </a>
-            <div class="text-xs text-slate-400">
-                Don't have an account?
-                <a href="{{ route('register') }}" class="text-indigo-400 hover:text-indigo-300 font-semibold ml-1">Sign Up</a>
+            <div class="text-xs text-slate-500 font-mono">
+                Private Agent Portal
             </div>
         </div>
     </header>
@@ -48,33 +47,6 @@
             <div class="text-center mb-8">
                 <h1 class="text-2xl font-extrabold text-white tracking-tight">Welcome Back</h1>
                 <p class="text-xs text-slate-400 mt-1">Sign in to access your omnichannel agent workspace</p>
-            </div>
-
-            <!-- Fast Demonstration Quick Login -->
-            <div class="mb-6 p-4 rounded-2xl bg-indigo-600/10 border border-indigo-500/30 space-y-2">
-                <div class="flex items-center justify-between text-xs font-semibold text-indigo-300">
-                    <span>⚡ Quick Demo One-Click Login</span>
-                    <span class="text-[10px] bg-indigo-500/20 px-1.5 py-0.5 rounded text-indigo-400">Instant</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button type="button" onclick="fillDemoCredentials('admin@helpdesk.com', 'password')" class="py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
-                        <x-icon name="user" class="text-sm" />
-                        <span>As Admin</span>
-                    </button>
-                    <button type="button" onclick="fillDemoCredentials('agent@helpdesk.com', 'password')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center justify-center gap-1.5">
-                        <x-icon name="user-check" class="text-sm" />
-                        <span>As Agent</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Divider -->
-            <div class="relative flex py-2 items-center mb-6">
-                <div class="flex-grow border-t border-slate-800"></div>
-                <span class="flex-shrink mx-3 text-[10px] text-slate-500 uppercase font-mono tracking-wider">Or enter credentials</span>
-                <div class="flex-grow border-t border-slate-800"></div>
-            </div>
-
             <!-- Error Alerts -->
             @if ($errors->any())
                 <div class="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium space-y-1">
@@ -89,7 +61,7 @@
                 @csrf
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
-                    <input type="email" name="email" id="email" required value="{{ old('email', 'admin@helpdesk.com') }}" placeholder="admin@helpdesk.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                    <input type="email" name="email" id="email" required value="{{ old('email') }}" placeholder="you@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
                 </div>
 
                 <div>
@@ -97,7 +69,7 @@
                         <label class="block text-xs font-semibold text-slate-300">Password</label>
                         <a href="#" class="text-[11px] text-indigo-400 hover:text-indigo-300">Forgot?</a>
                     </div>
-                    <input type="password" name="password" id="password" required value="password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                    <input type="password" name="password" id="password" required value="" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
                 </div>
 
                 <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
@@ -118,12 +90,5 @@
     <footer class="p-6 text-center text-xs text-slate-500">
         © 2026 OmniDesk Engine. All rights reserved.
     </footer>
-
-    <script>
-        function fillDemoCredentials(email, password) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = password;
-        }
-    </script>
 </body>
 </html>
