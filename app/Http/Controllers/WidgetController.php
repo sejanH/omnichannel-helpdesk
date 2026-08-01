@@ -52,10 +52,10 @@ class WidgetController extends Controller
             'is_active' => (bool)$channel->is_active,
             'configuration' => $config,
             'reverb' => [
-                'key' => env('REVERB_APP_KEY', env('VITE_REVERB_APP_KEY')),
-                'host' => env('REVERB_HOST', env('VITE_REVERB_HOST', request()->getHost())),
-                'port' => (int) env('REVERB_PORT', env('VITE_REVERB_PORT', 8080)),
-                'scheme' => env('REVERB_SCHEME', env('VITE_REVERB_SCHEME', 'http')),
+                'key' => config('reverb.apps.apps.0.key', env('REVERB_APP_KEY', env('VITE_REVERB_APP_KEY'))),
+                'host' => env('VITE_REVERB_HOST') ?: request()->getHost(),
+                'port' => (int) (env('VITE_REVERB_PORT') ?: env('REVERB_PORT', 8080)),
+                'scheme' => env('VITE_REVERB_SCHEME') ?: (request()->isSecure() ? 'https' : 'http'),
             ],
         ]);
     }

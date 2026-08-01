@@ -686,14 +686,29 @@
         if (!ticketId || !reverbConfig || !reverbConfig.key) return false;
 
         try {
-            const isTls = reverbConfig.scheme === 'https';
-            const wsProtocol = isTls ? 'wss://' : 'ws://';
-            const wsHost = reverbConfig.host || window.location.hostname;
-            const wsPort = reverbConfig.port ? `:${reverbConfig.port}` : '';
-            const wsUrl = `${wsProtocol}${wsHost}${wsPort}/app/${reverbConfig.key}?protocol=7&client=js&version=8.4.0&flash=false`;
+            const isHttps = window.location.protocol === 'https:' || reverbConfig.scheme === 'https';
+            const wsProtocol = isHttps ? 'wss://' : 'ws://';
 
-            if (wsConnection) {
-                try { wsConnection.close(); } catch (e) {}
+            let wsHost = reverbConfig.host;
+            if (!wsHost || wsHost === '127.0.0.1' || wsHost === 'localhost' || wsHost === '0.0.0.0') {
+                try {
+                    wsHost = new URL(baseUrl).hostname;
+                } catch (e) {
+                    wsHost = window.location.hostname;
+                }
+            }
+
+            let wsPort = '';
+            const portNum = parseInt(reverbConfig.port);
+            if (portNum && portNum !== 80 && portNum !== 443 && !isHttps) {
+                wsPort = `:${portNum}`;
+            }
+
+            const wsUrl = `${wsProtocol}${wsHost}${wsPort}/app/${reverbConfig.key}?protocol=7&client=js&version=8.4.0&flash=false`;
+            console.log('[OmniHelp Widget] Connecting WebSocket:', wsUrl);
+
+            if (wsConnection && (wsConnection.readyState === WebSocket.OPEN || wsConnection.readyState === WebSocket.CONNECTING)) {
+                return true;
             }
 
             wsConnection = new WebSocket(wsUrl);
