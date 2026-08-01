@@ -19,7 +19,7 @@ class WebhookController extends Controller
     {
         // 1. Meta Webhook Verification Challenge (GET)
         if ($request->isMethod('get')) {
-            $verifyToken = env('WHATSAPP_VERIFY_TOKEN', 'omnidesk_secret');
+            $verifyToken = env('WHATSAPP_VERIFY_TOKEN', 'omnihelp_secret');
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
             $challenge = $request->query('hub_challenge');
@@ -126,7 +126,7 @@ class WebhookController extends Controller
     public function handleFacebook(Request $request)
     {
         if ($request->isMethod('get')) {
-            $verifyToken = env('FACEBOOK_VERIFY_TOKEN', 'omnidesk_secret');
+            $verifyToken = env('FACEBOOK_VERIFY_TOKEN', 'omnihelp_secret');
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
             $challenge = $request->query('hub_challenge');

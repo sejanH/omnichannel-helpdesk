@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sign In — OmniDesk Helpdesk</title>
+    <title>Sign In — OmniHelp Helpdesk</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <span class="font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5">
-                        OmniDesk
+                        OmniHelp
                     </span>
                     <span class="block text-[11px] text-slate-400 font-medium leading-none">Omnichannel Platform</span>
                 </div>

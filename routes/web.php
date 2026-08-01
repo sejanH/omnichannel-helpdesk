@@ -68,6 +68,7 @@ Route::prefix('api/v1/widget')->group(function () {
     Route::post('/init', [WidgetController::class, 'initSession']);
     Route::get('/messages', [WidgetController::class, 'getMessages']);
     Route::post('/messages', [WidgetController::class, 'sendMessage']);
+    Route::post('/rating', [WidgetController::class, 'submitRating']);
 });
 
 // External Channel Webhooks (WhatsApp, Telegram, Facebook)

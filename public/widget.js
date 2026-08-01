@@ -24,7 +24,7 @@
                 const urlObj = new URL(currentScript.src);
                 baseUrl = urlObj.origin;
             } catch (e) {
-                console.warn('[OmniDesk] Could not parse script origin, defaulting to window location.');
+                console.warn('[OmniHelp] Could not parse script origin, defaulting to window location.');
             }
         }
     }
@@ -36,7 +36,7 @@
         title: 'Customer Support',
         subtitle: 'We typically reply in under 5 minutes',
         welcome_message: '',
-        logo_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk',
+        logo_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniHelp',
         theme: 'dark',
         launcher_icon: 'chat',
         require_prechat: false
@@ -67,7 +67,7 @@
             initWidgetUI();
         })
         .catch(err => {
-            console.error('[OmniDesk] Failed to load widget configuration:', err);
+            console.error('[OmniHelp] Failed to load widget configuration:', err);
             initWidgetUI(); // Fallback to default
         });
 
@@ -292,12 +292,15 @@
             .omni-input {
                 flex: 1;
                 padding: 10px 14px;
-                border-radius: 20px;
+                border-radius: 16px;
                 border: 1px solid ${config.theme === 'light' ? '#cbd5e1' : '#334155'};
                 background-color: ${config.theme === 'light' ? '#f8fafc' : '#020617'};
                 color: ${config.theme === 'light' ? '#0f172a' : '#f8fafc'};
                 font-size: 13px;
+                font-family: inherit;
                 outline: none;
+                resize: none;
+                max-height: 90px;
                 transition: border-color 0.2s ease;
             }
             .omni-input:focus {
@@ -368,20 +371,25 @@
             <div id="omni-widget-box">
                 <div class="omni-header">
                     <div class="omni-header-info">
-                        <img src="${config.logo_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk'}" class="omni-avatar" alt="Brand Logo">
+                        <img src="${config.logo_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniHelp'}" class="omni-avatar" alt="Brand Logo">
                         <div>
                             <div style="font-weight: 700; font-size: 14px; line-height: 1.2;">${escapeHtml(config.title)}</div>
                             <div style="font-size: 11px; opacity: 0.85;">${escapeHtml(config.subtitle)}</div>
                         </div>
                     </div>
-                    <button class="omni-close-btn" id="omni-widget-close" aria-label="Close Chat">
-                        <svg class="omni-w-5 omni-h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <button id="omni-widget-end-chat" title="End Chat & Rate Support" style="font-size:11px; padding:4px 8px; background:rgba(255,255,255,0.18); border-radius:6px; border:none; color:white; cursor:pointer; font-weight:600; transition:background 0.2s;">
+                            End Chat
+                        </button>
+                        <button class="omni-close-btn" id="omni-widget-close" aria-label="Close Chat">
+                            <svg class="omni-w-5 omni-h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
                 </div>
                 <div id="omni-widget-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
                     <!-- Dynamically rendered pre-chat form or messages -->
                 </div>
-                <div class="omni-branding">Powered by OmniDesk</div>
+                <div class="omni-branding">Powered by OmniHelp</div>
             </div>
         `;
         document.body.appendChild(container);
@@ -389,12 +397,17 @@
         // Event Listeners
         const launcher = document.getElementById('omni-widget-launcher');
         const closeBtn = document.getElementById('omni-widget-close');
-        
+        const endChatBtn = document.getElementById('omni-widget-end-chat');
+
         launcher.addEventListener('click', toggleChat);
         closeBtn.addEventListener('click', toggleChat);
+        if (endChatBtn) {
+            endChatBtn.addEventListener('click', function () {
+                renderRatingSurvey();
+            });
+        }
 
-        // Global JavaScript API
-        window.OmniDeskWidget = {
+        window.OmniHelpWidget = window.OmniDeskWidget = {
             toggle: toggleChat,
             open: function () { if (!isOpen) toggleChat(); },
             close: function () { if (isOpen) toggleChat(); }
@@ -476,14 +489,29 @@
         contentArea.innerHTML = `
             <div class="omni-messages" id="omni-messages-stream"></div>
             <form class="omni-footer" id="omni-form-msg">
-                <input type="text" id="omni-msg-input" class="omni-input" placeholder="Type your message..." autocomplete="off">
+                <textarea id="omni-msg-input" class="omni-input" rows="1" placeholder="Type your message..." autocomplete="off"></textarea>
                 <button type="submit" class="omni-send-btn" aria-label="Send">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                 </button>
             </form>
         `;
 
-        document.getElementById('omni-form-msg').addEventListener('submit', function (e) {
+        const msgForm = document.getElementById('omni-form-msg');
+        const msgInput = document.getElementById('omni-msg-input');
+
+        if (msgInput) {
+            msgInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                        return; // Allow native multiline newline insertion
+                    }
+                    e.preventDefault();
+                    msgForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            });
+        }
+
+        msgForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const input = document.getElementById('omni-msg-input');
             const text = input.value.trim();
@@ -516,7 +544,100 @@
                     knownMessageIds.add(data.message.id);
                 }
             })
-            .catch(err => console.error('[OmniDesk] Error sending message:', err));
+            .catch(err => console.error('[OmniHelp] Error sending message:', err));
+        });
+    }
+
+    function renderRatingSurvey() {
+        const contentArea = document.getElementById('omni-widget-content');
+        contentArea.innerHTML = `
+            <div style="padding: 24px 20px; display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:center; flex:1; text-align:center;">
+                <div style="font-size: 15px; font-weight: 700;">How was your support experience?</div>
+                <div style="font-size: 12px; color: #94a3b8;">Please take a moment to rate our customer service team.</div>
+                
+                <!-- 5-Star Rating Buttons -->
+                <div id="omni-star-rating-box" style="display:flex; gap:8px; justify-content:center; margin: 8px 0;">
+                    <button type="button" class="omni-star-btn" data-rating="1" style="font-size: 26px; background:none; border:none; cursor:pointer; opacity:0.3; transition: transform 0.2s;">⭐</button>
+                    <button type="button" class="omni-star-btn" data-rating="2" style="font-size: 26px; background:none; border:none; cursor:pointer; opacity:0.3; transition: transform 0.2s;">⭐</button>
+                    <button type="button" class="omni-star-btn" data-rating="3" style="font-size: 26px; background:none; border:none; cursor:pointer; opacity:0.3; transition: transform 0.2s;">⭐</button>
+                    <button type="button" class="omni-star-btn" data-rating="4" style="font-size: 26px; background:none; border:none; cursor:pointer; opacity:0.3; transition: transform 0.2s;">⭐</button>
+                    <button type="button" class="omni-star-btn" data-rating="5" style="font-size: 26px; background:none; border:none; cursor:pointer; opacity:1.0; transform:scale(1.2);">⭐</button>
+                </div>
+
+                <textarea id="omni-rating-comment" class="omni-input" rows="2" placeholder="Optional comments or feedback..." style="width:100%; box-sizing:border-box;"></textarea>
+
+                <button type="button" id="omni-submit-rating-btn" class="omni-submit-btn" style="width:100%;">
+                    Submit Rating & End Chat
+                </button>
+            </div>
+        `;
+
+        let selectedRating = 5;
+
+        // Star Selection Event Listeners
+        const starBtns = contentArea.querySelectorAll('.omni-star-btn');
+        starBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                selectedRating = parseInt(this.getAttribute('data-rating'));
+                starBtns.forEach(b => {
+                    const r = parseInt(b.getAttribute('data-rating'));
+                    if (r <= selectedRating) {
+                        b.style.opacity = '1.0';
+                        b.style.transform = 'scale(1.1)';
+                    } else {
+                        b.style.opacity = '0.3';
+                        b.style.transform = 'scale(0.9)';
+                    }
+                });
+            });
+        });
+
+        // Submit Rating Event Listener
+        document.getElementById('omni-submit-rating-btn').addEventListener('click', function () {
+            const commentInput = document.getElementById('omni-rating-comment');
+            const comment = commentInput ? commentInput.value.trim() : '';
+
+            if (ticketId) {
+                fetch(`${baseUrl}/api/v1/widget/rating`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ticket_id: ticketId,
+                        rating: selectedRating,
+                        comment: comment
+                    })
+                }).catch(e => console.error('[OmniHelp] Error submitting rating:', e));
+            }
+
+            renderChatEndedScreen();
+        });
+    }
+
+    function renderChatEndedScreen() {
+        // Clear active ticket ID so future chats initialize a brand new ticket!
+        localStorage.removeItem('omni_ticket_id');
+        ticketId = null;
+
+        const contentArea = document.getElementById('omni-widget-content');
+        contentArea.innerHTML = `
+            <div style="padding: 28px 20px; display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:center; flex:1; text-align:center;">
+                <div style="width:52px; height:52px; border-radius:50%; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.3); color:#4ade80; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;">✓</div>
+                <div style="font-size: 16px; font-weight: 700;">Chat Session Completed</div>
+                <div style="font-size: 12px; color: #94a3b8;">Thank you for chatting with us! Your feedback helps us improve our service.</div>
+                
+                <button type="button" id="omni-start-new-chat-btn" class="omni-submit-btn" style="width:100%; margin-top:12px;">
+                    Start New Conversation
+                </button>
+            </div>
+        `;
+
+        document.getElementById('omni-start-new-chat-btn').addEventListener('click', function () {
+            if (config.require_prechat) {
+                renderPreChatForm();
+            } else {
+                renderChatInterface();
+                ensureSession();
+            }
         });
     }
 
@@ -551,7 +672,7 @@
                 startRealtimeOrPolling();
             }
         })
-        .catch(err => console.error('[OmniDesk] Session initialization error:', err));
+        .catch(err => console.error('[OmniHelp] Session initialization error:', err));
     }
 
     function startRealtimeOrPolling() {
@@ -578,7 +699,7 @@
             wsConnection = new WebSocket(wsUrl);
 
             wsConnection.onopen = function () {
-                console.log('[OmniDesk Widget] Connected to Laravel Reverb WebSockets!');
+                console.log('[OmniHelp Widget] Connected to Laravel Reverb WebSockets!');
                 if (pollInterval) {
                     clearInterval(pollInterval);
                     pollInterval = null;
@@ -612,23 +733,23 @@
                         }
                     }
                 } catch (e) {
-                    console.error('[OmniDesk Widget] Error parsing WS event:', e);
+                    console.error('[OmniHelp Widget] Error parsing WS event:', e);
                 }
             };
 
             wsConnection.onerror = function (err) {
-                console.warn('[OmniDesk Widget] WebSocket error, falling back to polling:', err);
+                console.warn('[OmniHelp Widget] WebSocket error, falling back to polling:', err);
                 startPolling();
             };
 
             wsConnection.onclose = function () {
-                console.warn('[OmniDesk Widget] WebSocket closed, falling back to polling.');
+                console.warn('[OmniHelp Widget] WebSocket closed, falling back to polling.');
                 startPolling();
             };
 
             return true;
         } catch (e) {
-            console.error('[OmniDesk Widget] WebSocket initialization failed:', e);
+            console.error('[OmniHelp Widget] WebSocket initialization failed:', e);
             return false;
         }
     }
@@ -667,7 +788,7 @@
                     }
                 }
             })
-            .catch(err => console.error('[OmniDesk] Message polling error:', err));
+            .catch(err => console.error('[OmniHelp] Message polling error:', err));
     }
 
     function appendMessage(msg) {

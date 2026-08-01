@@ -29,7 +29,7 @@ class WidgetBuilderController extends Controller
                     'title' => 'Customer Support',
                     'subtitle' => 'We typically reply in under 5 minutes',
                     'welcome_message' => 'Hello! How can we assist you today?',
-                    'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk',
+                    'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniHelp',
                     'theme' => 'dark',
                     'launcher_icon' => 'message-dots',
                     'require_prechat' => false,

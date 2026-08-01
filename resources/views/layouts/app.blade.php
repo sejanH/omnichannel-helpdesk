@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'OmniDesk — Omnichannel Support Agent Workspace')</title>
+    <title>@yield('title', 'OmniHelp — Omnichannel Support Agent Workspace')</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">

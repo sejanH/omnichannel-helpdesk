@@ -40,7 +40,7 @@ class WidgetController extends Controller
             'title' => 'Customer Support',
             'subtitle' => 'We typically reply in under 5 minutes',
             'welcome_message' => '',
-            'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk',
+            'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniHelp',
             'theme' => 'dark',
             'launcher_icon' => 'chat',
             'require_prechat' => false,
@@ -289,6 +289,52 @@ class WidgetController extends Controller
         return response()->json([
             'success' => true,
             'message' => $message,
+        ]);
+    }
+
+    /**
+     * Submit customer rating & feedback survey, ending the chat session.
+     */
+    public function submitRating(Request $request)
+    {
+        $request->validate([
+            'ticket_id' => 'required|exists:tickets,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000',
+        ]);
+
+        $ticket = Ticket::findOrFail($request->input('ticket_id'));
+        $rating = (int) $request->input('rating');
+        $comment = trim($request->input('comment') ?: '');
+
+        $ticket->update([
+            'status' => 'resolved',
+            'resolved_at' => now(),
+            'rating' => $rating,
+            'feedback_comment' => $comment,
+        ]);
+
+        // Add internal system log message to ticket thread
+        $stars = str_repeat('⭐', $rating);
+        $noteText = "Customer ended chat session and rated support {$stars} ({$rating}/5).";
+        if ($comment) {
+            $noteText .= " Feedback: \"{$comment}\"";
+        }
+
+        $message = Message::create([
+            'ticket_id' => $ticket->id,
+            'sender_type' => 'system',
+            'sender_name' => 'Customer Survey',
+            'content' => $noteText,
+            'is_internal_note' => true,
+        ]);
+
+        broadcast(new MessageSent($message))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thank you for your feedback!',
+            'ticket' => $ticket,
         ]);
     }
 }

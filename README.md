@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://api.dicebear.com/7.x/bottts/svg?seed=OmniDesk" width="100" alt="OmniDesk Logo">
+  <img src="https://api.dicebear.com/7.x/bottts/svg?seed=OmniHelp" width="100" alt="OmniHelp Logo">
 </p>
 
-<h1 align="center">OmniDesk — Omnichannel Support Helpdesk & Live Chat System</h1>
+<h1 align="center">OmniHelp — Omnichannel Support Helpdesk & Live Chat System</h1>
 
 <p align="center">
   <strong>A modern, real-time omnichannel customer support platform built with Laravel 12, Vite 7, Tailwind CSS v4, Dart Sass, and WebSockets.</strong>
@@ -20,9 +20,9 @@
 
 ## 🌟 Overview
 
-**OmniDesk** consolidates customer communications from **Web Live Chat, WhatsApp, Email, Facebook Messenger, and Telegram** into a single, high-performance agent workspace dashboard.
+**OmniHelp** consolidates customer communications from **Web Live Chat, WhatsApp, Email, Facebook Messenger, and Telegram** into a single, high-performance agent workspace dashboard.
 
-Designed for speed and productivity, OmniDesk equips support teams with real-time bidirectional messaging, internal team collaboration notes, canned responses, SLA tracking, and a fully customizable floating live chat widget for web applications.
+Designed for speed and productivity, OmniHelp equips support teams with real-time bidirectional messaging, internal team collaboration notes, canned responses, SLA tracking, and a fully customizable floating live chat widget for web applications.
 
 ---
 

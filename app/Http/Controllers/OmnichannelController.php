@@ -115,20 +115,24 @@ class OmnichannelController extends Controller
     }
 
     /**
-     * Resolve a ticket
+     * Resolve or Re-open a ticket
      */
     public function resolveTicket(Ticket $ticket)
     {
+        $newStatus = in_array($ticket->status, ['resolved', 'closed']) ? 'open' : 'resolved';
+
         $ticket->update([
-            'status' => 'resolved',
-            'resolved_at' => now(),
+            'status' => $newStatus,
+            'resolved_at' => $newStatus === 'resolved' ? now() : null,
         ]);
+
+        $actionText = $newStatus === 'resolved' ? 'marked as resolved' : 're-opened';
 
         $message = Message::create([
             'ticket_id' => $ticket->id,
             'sender_type' => 'system',
             'sender_name' => 'System',
-            'content' => 'Ticket marked as resolved by ' . (auth()->user()?->name ?? 'Agent'),
+            'content' => "Ticket {$actionText} by " . (auth()->user()?->name ?? 'Agent'),
             'is_internal_note' => true,
         ]);
         

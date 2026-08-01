@@ -77,7 +77,7 @@ class OmnichannelSeeder extends Seeder
                     'phone_number' => '+18005550199',
                     'phone_number_id' => '109827364519283',
                     'token' => 'EAAG_SAMPLE_WHATSAPP_TOKEN',
-                    'verify_token' => 'omnidesk_secret',
+                    'verify_token' => 'omnihelp_secret',
                 ],
             ]
         );
@@ -103,7 +103,7 @@ class OmnichannelSeeder extends Seeder
                 'configuration' => [
                     'page_id' => '10928374615',
                     'page_access_token' => 'EAAH_SAMPLE_FACEBOOK_TOKEN',
-                    'verify_token' => 'omnidesk_secret',
+                    'verify_token' => 'omnihelp_secret',
                 ],
             ]
         );

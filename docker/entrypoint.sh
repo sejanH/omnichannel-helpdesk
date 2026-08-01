@@ -78,5 +78,5 @@ mkdir -p /var/www/html/storage/logs
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
-echo "OmniDesk Application (Nginx + PHP-FPM + MySQL + Reverb) is ready! Starting Supervisor..."
+echo "OmniHelp Application (Nginx + PHP-FPM + MySQL + Reverb) is ready! Starting Supervisor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

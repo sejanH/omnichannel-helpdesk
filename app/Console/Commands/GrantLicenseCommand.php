@@ -12,7 +12,7 @@ class GrantLicenseCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'omnidesk:license-grant 
+    protected $signature = 'omnihelp:license-grant 
                             {key? : Existing license key string to activate}
                             {--domain=support.sejan.dev : Target domain name}
                             {--plan=pro : Plan tier (starter, pro, enterprise)}
@@ -24,7 +24,7 @@ class GrantLicenseCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Grant or activate an official OmniDesk license key for a domain host instance';
+    protected $description = 'Grant or activate an official OmniHelp license key for a domain host instance';
 
     /**
      * Execute the console command.

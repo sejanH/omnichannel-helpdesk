@@ -9,12 +9,12 @@
     <div>
         <!-- Brand Header & Toggle Button -->
         <div class="brand-container flex items-center justify-between pb-4 mb-6 border-b border-slate-800 transition-all duration-300">
-            <a href="{{ route('home') }}" title="OmniDesk Home" class="flex items-center gap-3 overflow-hidden group">
+            <a href="{{ route('home') }}" title="OmniHelp Home" class="flex items-center gap-3 overflow-hidden group">
                 <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                     <x-icon name="messages" class="text-2xl text-white shrink-0" />
                 </div>
                 <div class="sidebar-text overflow-hidden transition-all duration-300">
-                    <h1 class="font-bold text-lg leading-tight tracking-tight text-white whitespace-nowrap">OmniDesk</h1>
+                    <h1 class="font-bold text-lg leading-tight tracking-tight text-white whitespace-nowrap">OmniHelp</h1>
                     <span class="text-xs text-indigo-400 font-medium whitespace-nowrap">Omnichannel Platform</span>
                 </div>
             </a>

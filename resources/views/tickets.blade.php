@@ -45,6 +45,17 @@
                                             {{ $ticket->unread_messages_count }} New
                                         </span>
                                     @endif
+                                    @if($ticket->status === 'resolved')
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✓ Resolved</span>
+                                    @elseif($ticket->status === 'closed')
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-slate-700/50 text-slate-400 border border-slate-600/30">Closed</span>
+                                    @elseif($ticket->status === 'in_progress')
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">In Progress</span>
+                                    @elseif($ticket->status === 'pending')
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">Pending</span>
+                                    @else
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Open</span>
+                                    @endif
                                     <span class="badge-priority priority-{{ $ticket->priority }}">
                                         {{ $ticket->priority }}
                                     </span>
@@ -84,6 +95,7 @@
                                     conversation</h2>
                                 <span id="active-ticket-number"
                                     class="text-xs font-mono text-slate-400">#TCK-1001</span>
+                                <span id="active-ticket-rating" class="hidden px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30"></span>
                             </div>
                             <div class="text-xs text-slate-400 flex items-center gap-2">
                                 <span id="active-contact-name">Customer</span>
@@ -589,6 +601,41 @@
                     $('#active-channel-name').text(data.ticket.channel ? data.ticket.channel.name : 'Channel');
                     $('#assign-agent-select').val(data.ticket.assigned_agent_id || '');
 
+                    if (data.ticket.rating) {
+                        const stars = '⭐'.repeat(data.ticket.rating);
+                        $('#active-ticket-rating').html(stars + ' ' + data.ticket.rating + '/5').removeClass('hidden');
+                    } else {
+                        $('#active-ticket-rating').addClass('hidden');
+                    }
+
+                    // Dynamic status pill & action button update
+                    if (data.ticket.status === 'resolved' || data.ticket.status === 'closed') {
+                        $('#btn-mark-resolved')
+                            .html('<span>Re-open Ticket</span>')
+                            .removeClass('bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30')
+                            .addClass('bg-amber-600/20 text-amber-400 border-amber-500/30 hover:bg-amber-600/30');
+
+                        $('#active-ticket-status')
+                            .html(data.ticket.status === 'resolved' ? '✓ RESOLVED' : 'CLOSED')
+                            .attr('class', data.ticket.status === 'resolved'
+                                ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase'
+                                : 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700/50 text-slate-400 border border-slate-600/30 uppercase');
+                    } else {
+                        $('#btn-mark-resolved')
+                            .html('<span>Mark Resolved</span>')
+                            .removeClass('bg-amber-600/20 text-amber-400 border-amber-500/30 hover:bg-amber-600/30')
+                            .addClass('bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30');
+
+                        const statusLabel = (data.ticket.status || 'open').replace('_', ' ').toUpperCase();
+                        const statusClass = data.ticket.status === 'in_progress'
+                            ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase'
+                            : (data.ticket.status === 'pending'
+                                ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase'
+                                : 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase');
+
+                        $('#active-ticket-status').html(statusLabel).attr('class', statusClass);
+                    }
+
                     let messagesHtml = '';
                     data.messages.forEach(function (msg) {
                         messagesHtml += renderMessageBubble(msg);
@@ -686,7 +733,7 @@
                 });
             });
 
-            // Mark Ticket as Resolved
+            // Toggle Ticket Status (Resolve / Re-open)
             $('#btn-mark-resolved').on('click', function () {
                 if (!activeTicketId) return;
 
@@ -700,13 +747,19 @@
                         $('#messages-container').append(renderMessageBubble(response.message));
                         scrollToBottom();
                         
-                        // Update ticket card UI
+                        const newStatus = response.ticket.status;
                         const card = $('.ticket-card[data-ticket-id="' + activeTicketId + '"]');
-                        card.attr('data-status', 'resolved');
-                        // Show visual indicator in list
-                        if (card.find('.resolved-label').length === 0) {
-                            card.find('.badge-priority').after('<span class="resolved-label ml-1 text-[9px] uppercase font-bold text-emerald-500">Resolved</span>');
+                        card.attr('data-status', newStatus);
+
+                        const pill = card.find('.ticket-status-pill');
+                        if (newStatus === 'resolved') {
+                            pill.html('✓ Resolved').attr('class', 'ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30');
+                        } else {
+                            pill.html('Open').attr('class', 'ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30');
                         }
+
+                        // Refresh active ticket header & button state
+                        loadTicketMessages(activeTicketId);
                     }
                 });
             });

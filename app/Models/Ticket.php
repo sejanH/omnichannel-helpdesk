@@ -20,6 +20,8 @@ class Ticket extends Model
         'last_activity_at',
         'first_responded_at',
         'resolved_at',
+        'rating',
+        'feedback_comment',
     ];
 
     protected $casts = [

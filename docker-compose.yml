@@ -14,7 +14,7 @@ services:
       # --- CLIENT ENVIRONMENT & DOMAIN SETTINGS ---
       # For production over SSL reverse proxy, set APP_URL to your HTTPS domain:
       # e.g., APP_URL: "https://client1.sejan.dev" or "https://support.acmecorp.com"
-      APP_NAME: "OmniDesk Helpdesk"
+      APP_NAME: "OmniHelp Helpdesk"
       APP_ENV: "production"
       APP_DEBUG: "false"
       APP_URL: "https://support.sejan.dev"
