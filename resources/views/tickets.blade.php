@@ -665,6 +665,76 @@
                 });
             }
 
+            // Listen for Real-Time Global Omnichannel Events (New Ticket Arrival & Message Live Feed)
+            if (window.Echo) {
+                window.Echo.channel('omnichannel-dashboard')
+                    .listen('.ticket.created', function (e) {
+                        if (!e.ticket) return;
+
+                        // Check if ticket card already exists in left list
+                        if ($('.ticket-card[data-ticket-id="' + e.ticket.id + '"]').length === 0) {
+                            const newCardHtml = renderTicketCardHtml(e.ticket);
+                            $('#tickets-list').prepend(newCardHtml);
+                            
+                            // Re-apply active filters
+                            applyFilteringAndSyncUrl();
+                        }
+                    })
+                    .listen('.message.sent', function (e) {
+                        if (!e.message) return;
+
+                        // Update snippet & time on left list card
+                        const card = $('.ticket-card[data-ticket-id="' + e.message.ticket_id + '"]');
+                        if (card.length > 0) {
+                            card.find('.ticket-snippet-text').text(e.message.content);
+                            card.find('.ticket-time-text').text('Just now');
+                            // Move updated ticket to top of list
+                            $('#tickets-list').prepend(card);
+                        }
+                    });
+            }
+
+            function renderTicketCardHtml(t) {
+                const channelName = t.channel ? t.channel.name : 'Web';
+                const channelType = t.channel ? t.channel.type : 'web';
+                const contactName = t.contact ? t.contact.name : 'Guest';
+                const snippet = t.latest_message ? t.latest_message.content : 'New conversation started.';
+                const priority = t.priority || 'medium';
+
+                return `
+                    <div class="ticket-card p-4 hover:bg-slate-800/40 cursor-pointer transition border-l-4 border-transparent bg-indigo-950/30 border-indigo-500/50 shadow-lg"
+                        data-ticket-id="${t.id}"
+                        data-status="${t.status}"
+                        data-assigned-id="${t.assigned_agent_id || ''}"
+                        data-unread="true">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="badge-channel badge-${channelType}">
+                                ${channelName}
+                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="unread-badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
+                                    New
+                                </span>
+                                <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    Open
+                                </span>
+                                <span class="badge-priority priority-${priority}">
+                                    ${priority}
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="font-semibold text-sm text-slate-200 line-clamp-1 mb-1">${t.subject}</h3>
+                        <p class="ticket-snippet-text text-xs text-slate-400 line-clamp-1 mb-2">
+                            ${snippet}
+                        </p>
+                        <div class="flex items-center justify-between text-xs text-slate-500">
+                            <span class="font-medium text-slate-400">${contactName}</span>
+                            <span class="ticket-time-text">Just now</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             // Render Message Bubble
             function renderMessageBubble(msg) {
                 const isInternal = msg.is_internal_note;

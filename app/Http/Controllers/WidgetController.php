@@ -212,6 +212,8 @@ class WidgetController extends Controller
                 'contact_id' => $contact->id,
                 'last_activity_at' => now(),
             ]);
+
+            broadcast(new \App\Events\TicketCreated($ticket));
         }
 
         $messages = Message::where('ticket_id', $ticket->id)
@@ -308,7 +310,7 @@ class WidgetController extends Controller
         $comment = trim($request->input('comment') ?: '');
 
         $ticket->update([
-            'status' => 'resolved',
+            'status' => 'closed',
             'resolved_at' => now(),
             'rating' => $rating,
             'feedback_comment' => $comment,
@@ -316,7 +318,7 @@ class WidgetController extends Controller
 
         // Add internal system log message to ticket thread
         $stars = str_repeat('⭐', $rating);
-        $noteText = "Customer ended chat session and rated support {$stars} ({$rating}/5).";
+        $noteText = "Customer closed the ticket and rated support {$stars} ({$rating}/5).";
         if ($comment) {
             $noteText .= " Feedback: \"{$comment}\"";
         }

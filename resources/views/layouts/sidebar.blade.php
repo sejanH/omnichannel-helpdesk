@@ -58,6 +58,14 @@
                 <span class="sidebar-text">Agent Roster</span>
             </a>
 
+            @if(auth()->check() && auth()->user()->role === 'admin')
+            <a href="{{ route('reports.index') }}" title="Reports & Analytics"
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('reports.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
+                <x-icon name="chart-bar" class="text-xl shrink-0 text-amber-400" />
+                <span class="sidebar-text">Analytics & Reports</span>
+            </a>
+            @endif
+
             <a href="{{ route('widget-builder.index') }}" title="Widget Builder Studio"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-left cursor-pointer {{ request()->routeIs('widget-builder.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60' }}">
                 <x-icon name="adjustments-horizontal" class="text-xl shrink-0" />

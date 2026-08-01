@@ -38,6 +38,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/billing/resume', [BillingController::class, 'resume'])->name('billing.resume');
     Route::post('/billing/verify-license', [BillingController::class, 'verifyLicense'])->name('billing.verify_license');
 
+    // Reports & Performance Analytics (Admin Only)
+    Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+
     // Agent & CRM User Management Routes
     Route::get('/agents', [AgentController::class, 'index'])->name('agents.index');
     Route::post('/agents', [AgentController::class, 'store'])->name('agents.store');

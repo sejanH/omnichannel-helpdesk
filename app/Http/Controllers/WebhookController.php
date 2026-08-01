@@ -114,6 +114,10 @@ class WebhookController extends Controller
                 'content' => $content,
             ]);
 
+            if ($ticket->wasRecentlyCreated) {
+                broadcast(new \App\Events\TicketCreated($ticket));
+            }
+
             broadcast(new MessageSent($message))->toOthers();
         }
 

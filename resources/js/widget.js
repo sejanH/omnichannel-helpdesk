@@ -378,8 +378,8 @@
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <button id="omni-widget-end-chat" title="End Chat & Rate Support" style="font-size:11px; padding:4px 8px; background:rgba(255,255,255,0.18); border-radius:6px; border:none; color:white; cursor:pointer; font-weight:600; transition:background 0.2s;">
-                            End Chat
+                        <button id="omni-widget-end-chat" title="Close Ticket & Rate Support" style="font-size:11px; padding:4px 8px; background:rgba(255,255,255,0.18); border-radius:6px; border:none; color:white; cursor:pointer; font-weight:600; transition:background 0.2s;">
+                            Close Ticket
                         </button>
                         <button class="omni-close-btn" id="omni-widget-close" aria-label="Close Chat">
                             <svg class="omni-w-5 omni-h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -552,8 +552,8 @@
         const contentArea = document.getElementById('omni-widget-content');
         contentArea.innerHTML = `
             <div style="padding: 24px 20px; display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:center; flex:1; text-align:center;">
-                <div style="font-size: 15px; font-weight: 700;">How was your support experience?</div>
-                <div style="font-size: 12px; color: #94a3b8;">Please take a moment to rate our customer service team.</div>
+                <div style="font-size: 15px; font-weight: 700;">Close Ticket & Rate Support</div>
+                <div style="font-size: 12px; color: #94a3b8;">How was your experience with our support team?</div>
                 
                 <!-- 5-Star Rating Buttons -->
                 <div id="omni-star-rating-box" style="display:flex; gap:8px; justify-content:center; margin: 8px 0;">
@@ -567,7 +567,7 @@
                 <textarea id="omni-rating-comment" class="omni-input" rows="2" placeholder="Optional comments or feedback..." style="width:100%; box-sizing:border-box;"></textarea>
 
                 <button type="button" id="omni-submit-rating-btn" class="omni-submit-btn" style="width:100%;">
-                    Submit Rating & End Chat
+                    Submit Rating & Close Ticket
                 </button>
             </div>
         `;
@@ -622,11 +622,11 @@
         contentArea.innerHTML = `
             <div style="padding: 28px 20px; display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:center; flex:1; text-align:center;">
                 <div style="width:52px; height:52px; border-radius:50%; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.3); color:#4ade80; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;">✓</div>
-                <div style="font-size: 16px; font-weight: 700;">Chat Session Completed</div>
-                <div style="font-size: 12px; color: #94a3b8;">Thank you for chatting with us! Your feedback helps us improve our service.</div>
+                <div style="font-size: 16px; font-weight: 700;">Ticket Closed & Feedback Saved</div>
+                <div style="font-size: 12px; color: #94a3b8;">Your ticket has been marked closed. Thank you for your feedback!</div>
                 
                 <button type="button" id="omni-start-new-chat-btn" class="omni-submit-btn" style="width:100%; margin-top:12px;">
-                    Start New Conversation
+                    Start New Ticket / Chat
                 </button>
             </div>
         `;
