@@ -511,18 +511,7 @@
             isSending = true;
             input.value = '';
 
-            const tempId = 'temp_' + Date.now();
-
-            // Append temporary local bubble
-            appendMessage({
-                id: tempId,
-                sender_type: 'customer',
-                sender_name: visitorName || 'Visitor',
-                content: text,
-                created_at: new Date().toISOString()
-            });
-
-            // Send to server
+            // Send to server & append ONLY when DB write succeeds
             fetch(`${baseUrl}/api/v1/widget/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -537,20 +526,17 @@
                 isSending = false;
                 if (data.message) {
                     knownMessageIds.add(data.message.id);
-
-                    const tempEl = document.getElementById(`omni-msg-${tempId}`);
-                    const realEl = document.getElementById(`omni-msg-${data.message.id}`);
-
-                    if (tempEl && realEl) {
-                        tempEl.remove();
-                    } else if (tempEl) {
-                        tempEl.id = `omni-msg-${data.message.id}`;
-                    }
+                    appendMessage(data.message);
+                } else {
+                    input.value = text;
+                    alert('[OmniHelp] Failed to send message. Please try again.');
                 }
             })
             .catch(err => {
                 isSending = false;
+                input.value = text;
                 console.error('[OmniHelp] Error sending message:', err);
+                alert('[OmniHelp] Network error while sending message. Please check your connection.');
             });
         }
 
@@ -754,29 +740,22 @@
                     if (parsed.event === 'message.sent' || parsed.event === '.message.sent') {
                         let payload = typeof parsed.data === 'string' ? JSON.parse(parsed.data) : parsed.data;
                         const msg = payload.message || payload;
-                        if (msg && msg.id && !knownMessageIds.has(msg.id)) {
-                            knownMessageIds.add(msg.id);
+                        if (msg && msg.id) {
+                            if (!knownMessageIds.has(msg.id)) {
+                                knownMessageIds.add(msg.id);
 
-                            const tempEls = document.querySelectorAll('[id^="omni-msg-temp_"]');
-                            let matchedTemp = null;
-                            tempEls.forEach(el => {
-                                if (el.textContent && el.textContent.includes(msg.content)) {
-                                    matchedTemp = el;
-                                }
-                            });
+                                // Only append agent & system messages (customer messages are rendered locally upon typing)
+                                if (msg.sender_type !== 'customer') {
+                                    appendMessage(msg);
 
-                            if (matchedTemp) {
-                                matchedTemp.id = `omni-msg-${msg.id}`;
-                            } else {
-                                appendMessage(msg);
-                            }
-
-                            if (msg.sender_type === 'agent' && !isOpen) {
-                                unreadCount++;
-                                const badge = document.getElementById('omni-widget-badge');
-                                if (badge) {
-                                    badge.textContent = unreadCount;
-                                    badge.style.display = 'flex';
+                                    if (msg.sender_type === 'agent' && !isOpen) {
+                                        unreadCount++;
+                                        const badge = document.getElementById('omni-widget-badge');
+                                        if (badge) {
+                                            badge.textContent = unreadCount;
+                                            badge.style.display = 'flex';
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -820,22 +799,12 @@
                         if (!knownMessageIds.has(msg.id)) {
                             knownMessageIds.add(msg.id);
 
-                            const tempEls = document.querySelectorAll('[id^="omni-msg-temp_"]');
-                            let matchedTemp = null;
-                            tempEls.forEach(el => {
-                                if (el.textContent && el.textContent.includes(msg.content)) {
-                                    matchedTemp = el;
-                                }
-                            });
-
-                            if (matchedTemp) {
-                                matchedTemp.id = `omni-msg-${msg.id}`;
-                            } else {
+                            // Only append agent & system messages from polling
+                            if (msg.sender_type !== 'customer') {
                                 appendMessage(msg);
-                            }
-
-                            if (msg.sender_type === 'agent') {
-                                hasNewAgentMsg = true;
+                                if (msg.sender_type === 'agent') {
+                                    hasNewAgentMsg = true;
+                                }
                             }
                         }
                     });

@@ -46,16 +46,18 @@ class WidgetController extends Controller
             'require_prechat' => false,
         ], $channel->configuration ?? []);
 
+        $isSecure = request()->isSecure() || request()->header('X-Forwarded-Proto') === 'https';
+
         return response()->json([
             'channel_id' => $channel->id,
             'channel_name' => $channel->name,
             'is_active' => (bool)$channel->is_active,
             'configuration' => $config,
             'reverb' => [
-                'key' => config('reverb.apps.apps.0.key', env('REVERB_APP_KEY', env('VITE_REVERB_APP_KEY'))),
+                'key' => config('reverb.apps.apps.0.key', env('REVERB_APP_KEY', env('VITE_REVERB_APP_KEY', 'omnihelp-key'))),
                 'host' => env('VITE_REVERB_HOST') ?: request()->getHost(),
-                'port' => (int) (env('VITE_REVERB_PORT') ?: env('REVERB_PORT', 8080)),
-                'scheme' => env('VITE_REVERB_SCHEME') ?: (request()->isSecure() ? 'https' : 'http'),
+                'port' => (int) (env('VITE_REVERB_PORT') ?: ($isSecure ? 443 : env('REVERB_PORT', 8080))),
+                'scheme' => env('VITE_REVERB_SCHEME') ?: ($isSecure ? 'https' : 'http'),
             ],
         ]);
     }
