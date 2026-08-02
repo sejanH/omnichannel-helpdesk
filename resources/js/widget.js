@@ -498,27 +498,19 @@
 
         const msgForm = document.getElementById('omni-form-msg');
         const msgInput = document.getElementById('omni-msg-input');
+        let isSending = false;
 
-        if (msgInput) {
-            msgInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') {
-                    if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                        return; // Allow native multiline newline insertion
-                    }
-                    e.preventDefault();
-                    msgForm.dispatchEvent(new Event('submit', { cancelable: true }));
-                }
-            });
-        }
+        function handleSendMessage() {
+            if (isSending) return;
 
-        msgForm.addEventListener('submit', function (e) {
-            e.preventDefault();
             const input = document.getElementById('omni-msg-input');
+            if (!input) return;
             const text = input.value.trim();
             if (!text || !ticketId) return;
 
+            isSending = true;
             input.value = '';
-            
+
             const tempId = 'temp_' + Date.now();
 
             // Append temporary local bubble
@@ -542,6 +534,7 @@
             })
             .then(res => res.json())
             .then(data => {
+                isSending = false;
                 if (data.message) {
                     knownMessageIds.add(data.message.id);
 
@@ -555,7 +548,24 @@
                     }
                 }
             })
-            .catch(err => console.error('[OmniHelp] Error sending message:', err));
+            .catch(err => {
+                isSending = false;
+                console.error('[OmniHelp] Error sending message:', err);
+            });
+        }
+
+        if (msgInput) {
+            msgInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+        }
+
+        msgForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            handleSendMessage();
         });
     }
 
