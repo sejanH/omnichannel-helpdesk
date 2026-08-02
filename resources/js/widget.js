@@ -519,9 +519,11 @@
 
             input.value = '';
             
+            const tempId = 'temp_' + Date.now();
+
             // Append temporary local bubble
             appendMessage({
-                id: 'temp_' + Date.now(),
+                id: tempId,
                 sender_type: 'customer',
                 sender_name: visitorName || 'Visitor',
                 content: text,
@@ -542,6 +544,15 @@
             .then(data => {
                 if (data.message) {
                     knownMessageIds.add(data.message.id);
+
+                    const tempEl = document.getElementById(`omni-msg-${tempId}`);
+                    const realEl = document.getElementById(`omni-msg-${data.message.id}`);
+
+                    if (tempEl && realEl) {
+                        tempEl.remove();
+                    } else if (tempEl) {
+                        tempEl.id = `omni-msg-${data.message.id}`;
+                    }
                 }
             })
             .catch(err => console.error('[OmniHelp] Error sending message:', err));
@@ -735,7 +746,20 @@
                         const msg = payload.message || payload;
                         if (msg && msg.id && !knownMessageIds.has(msg.id)) {
                             knownMessageIds.add(msg.id);
-                            appendMessage(msg);
+
+                            const tempEls = document.querySelectorAll('[id^="omni-msg-temp_"]');
+                            let matchedTemp = null;
+                            tempEls.forEach(el => {
+                                if (el.textContent && el.textContent.includes(msg.content)) {
+                                    matchedTemp = el;
+                                }
+                            });
+
+                            if (matchedTemp) {
+                                matchedTemp.id = `omni-msg-${msg.id}`;
+                            } else {
+                                appendMessage(msg);
+                            }
 
                             if (msg.sender_type === 'agent' && !isOpen) {
                                 unreadCount++;
@@ -785,7 +809,20 @@
                     data.messages.forEach(msg => {
                         if (!knownMessageIds.has(msg.id)) {
                             knownMessageIds.add(msg.id);
-                            appendMessage(msg);
+
+                            const tempEls = document.querySelectorAll('[id^="omni-msg-temp_"]');
+                            let matchedTemp = null;
+                            tempEls.forEach(el => {
+                                if (el.textContent && el.textContent.includes(msg.content)) {
+                                    matchedTemp = el;
+                                }
+                            });
+
+                            if (matchedTemp) {
+                                matchedTemp.id = `omni-msg-${msg.id}`;
+                            } else {
+                                appendMessage(msg);
+                            }
 
                             if (msg.sender_type === 'agent') {
                                 hasNewAgentMsg = true;
@@ -810,6 +847,11 @@
         const stream = document.getElementById('omni-messages-stream');
         if (!stream) return;
 
+        // Skip if message with exact ID is already present in the DOM
+        if (msg.id && document.getElementById(`omni-msg-${msg.id}`)) {
+            return;
+        }
+
         const isCustomer = msg.sender_type === 'customer';
         const isSystem = msg.sender_type === 'system';
 
@@ -817,6 +859,7 @@
         const timeStr = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const msgDiv = document.createElement('div');
+        msgDiv.id = msg.id ? `omni-msg-${msg.id}` : `omni-msg-temp_${Date.now()}`;
         msgDiv.className = `omni-msg ${msgClass}`;
 
         if (isSystem) {
