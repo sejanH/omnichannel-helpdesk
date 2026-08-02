@@ -619,6 +619,6 @@
     </script>
 
     <!-- OmniDesk Live Chat Widget Script Tag -->
-    <script src="{{ url('/widget.js') }}" data-channel-id="1" async></script>
+    <script src="{{ url('/widget.js') }}?v={{ file_exists(public_path('widget.js')) ? filemtime(public_path('widget.js')) : time() }}" data-channel-id="1" async></script>
 </body>
 </html>
