@@ -525,7 +525,8 @@
             .then(data => {
                 isSending = false;
                 if (data.message) {
-                    knownMessageIds.add(data.message.id);
+                    const msgIdStr = String(data.message.id);
+                    knownMessageIds.add(msgIdStr);
                     appendMessage(data.message);
                 } else {
                     input.value = text;
@@ -672,7 +673,8 @@
                     const stream = document.getElementById('omni-messages-stream');
                     if (stream) stream.innerHTML = '';
                     data.messages.forEach(msg => {
-                        knownMessageIds.add(msg.id);
+                        const msgIdStr = String(msg.id);
+                        knownMessageIds.add(msgIdStr);
                         appendMessage(msg);
                     });
                 }
@@ -737,12 +739,14 @@
             wsConnection.onmessage = function (evt) {
                 try {
                     const parsed = JSON.parse(evt.data);
-                    if (parsed.event === 'message.sent' || parsed.event === '.message.sent') {
+                    const eventName = parsed.event || '';
+                    if (eventName.includes('message.sent') || eventName.includes('MessageSent')) {
                         let payload = typeof parsed.data === 'string' ? JSON.parse(parsed.data) : parsed.data;
                         const msg = payload.message || payload;
                         if (msg && msg.id) {
-                            if (!knownMessageIds.has(msg.id)) {
-                                knownMessageIds.add(msg.id);
+                            const msgIdStr = String(msg.id);
+                            if (!knownMessageIds.has(msgIdStr)) {
+                                knownMessageIds.add(msgIdStr);
 
                                 // Only append agent & system messages (customer messages are rendered locally upon typing)
                                 if (msg.sender_type !== 'customer') {
@@ -796,8 +800,9 @@
                 if (data.messages && Array.isArray(data.messages)) {
                     let hasNewAgentMsg = false;
                     data.messages.forEach(msg => {
-                        if (!knownMessageIds.has(msg.id)) {
-                            knownMessageIds.add(msg.id);
+                        const msgIdStr = String(msg.id);
+                        if (!knownMessageIds.has(msgIdStr)) {
+                            knownMessageIds.add(msgIdStr);
 
                             // Only append agent & system messages from polling
                             if (msg.sender_type !== 'customer') {
@@ -826,8 +831,10 @@
         const stream = document.getElementById('omni-messages-stream');
         if (!stream) return;
 
-        // Skip if message with exact ID is already present in the DOM
-        if (msg.id && document.getElementById(`omni-msg-${msg.id}`)) {
+        const msgIdStr = msg.id ? String(msg.id) : '';
+
+        // Strict DOM deduplication check
+        if (msgIdStr && document.getElementById(`omni-msg-${msgIdStr}`)) {
             return;
         }
 
@@ -838,7 +845,7 @@
         const timeStr = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const msgDiv = document.createElement('div');
-        msgDiv.id = msg.id ? `omni-msg-${msg.id}` : `omni-msg-temp_${Date.now()}`;
+        msgDiv.id = msgIdStr ? `omni-msg-${msgIdStr}` : `omni-msg-temp_${Date.now()}`;
         msgDiv.className = `omni-msg ${msgClass}`;
 
         if (isSystem) {
