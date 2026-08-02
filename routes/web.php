@@ -5,6 +5,9 @@ use App\Http\Controllers\OmnichannelController;
 use App\Http\Controllers\WidgetController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () { return view('welcome'); })->name('home');
+Route::get('/demo', function () { return view('demo'); })->name('demo');
+
 Route::get('/widget.js', function () {
     $path = public_path('widget.js');
     if (!file_exists($path)) {
