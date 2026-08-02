@@ -114,7 +114,7 @@
             #omni-widget-launcher {
                 position: fixed;
                 ${pos.launcher}
-                z-index: 999999;
+                z-index: 999998;
                 width: 60px;
                 height: 60px;
                 border-radius: 50%;
@@ -151,7 +151,7 @@
             #omni-widget-box {
                 position: fixed;
                 ${pos.window}
-                z-index: 999998;
+                z-index: 999999;
                 width: 380px;
                 max-width: calc(100vw - 32px);
                 height: 540px;
@@ -174,8 +174,14 @@
                 transform: translateY(0) scale(1);
                 pointer-events: auto;
             }
-            #omni-widget-container.omni-open #omni-widget-launcher {
+            #omni-widget-container.omni-open #omni-widget-launcher,
+            #omni-widget-launcher.omni-hidden {
                 display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
             }
             @media (max-width: 640px) {
                 #omni-widget-box {
@@ -435,14 +441,24 @@
         if (isOpen) {
             if (container) container.classList.add('omni-open');
             if (box) box.classList.add('omni-open');
-            if (launcher) launcher.style.display = 'none';
+            if (launcher) {
+                launcher.classList.add('omni-hidden');
+                launcher.style.setProperty('display', 'none', 'important');
+                launcher.style.setProperty('visibility', 'hidden', 'important');
+                launcher.style.setProperty('opacity', '0', 'important');
+            }
             unreadCount = 0;
             if (badge) badge.style.display = 'none';
             scrollToBottom();
         } else {
             if (container) container.classList.remove('omni-open');
             if (box) box.classList.remove('omni-open');
-            if (launcher) launcher.style.display = 'flex';
+            if (launcher) {
+                launcher.classList.remove('omni-hidden');
+                launcher.style.setProperty('display', 'flex', 'important');
+                launcher.style.setProperty('visibility', 'visible', 'important');
+                launcher.style.setProperty('opacity', '1', 'important');
+            }
         }
     }
 
