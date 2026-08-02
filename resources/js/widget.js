@@ -195,6 +195,7 @@
                     max-height: 100vh !important;
                     border-radius: 0 !important;
                     border: none !important;
+                    z-index: 2147483647 !important;
                 }
                 #omni-widget-launcher {
                     bottom: 16px !important;
@@ -858,9 +859,21 @@
 
         const msgIdStr = msg.id ? String(msg.id) : '';
 
-        // Strict DOM deduplication check
+        // Strict DOM ID check
         if (msgIdStr && document.getElementById(`omni-msg-${msgIdStr}`)) {
             return;
+        }
+
+        // Strict content deduplication check against the last rendered bubble
+        const lastMsg = stream.lastElementChild;
+        if (lastMsg && msg.content) {
+            const lastText = lastMsg.innerText || lastMsg.textContent || '';
+            if (lastText.includes(msg.content) && (msg.sender_type === 'customer' || lastMsg.classList.contains('omni-msg-outgoing'))) {
+                if (msgIdStr && !lastMsg.id.includes(msgIdStr)) {
+                    lastMsg.id = `omni-msg-${msgIdStr}`;
+                }
+                return;
+            }
         }
 
         const isCustomer = msg.sender_type === 'customer';

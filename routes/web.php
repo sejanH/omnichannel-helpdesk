@@ -5,8 +5,19 @@ use App\Http\Controllers\OmnichannelController;
 use App\Http\Controllers\WidgetController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () { return view('welcome'); })->name('home');
-Route::get('/demo', function () { return view('demo'); })->name('demo');
+Route::get('/widget.js', function () {
+    $path = public_path('widget.js');
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, [
+        'Content-Type' => 'application/javascript; charset=UTF-8',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
+        'Access-Control-Allow-Origin' => '*',
+    ]);
+});
 
 use App\Http\Controllers\DocsController;
 Route::get('/docs/{page?}', [DocsController::class, 'show'])->where('page', '.*')->name('docs.show');
