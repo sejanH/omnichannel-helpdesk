@@ -174,6 +174,9 @@
                 transform: translateY(0) scale(1);
                 pointer-events: auto;
             }
+            #omni-widget-container.omni-open #omni-widget-launcher {
+                display: none !important;
+            }
             @media (max-width: 640px) {
                 #omni-widget-box {
                     top: 0 !important;
@@ -424,16 +427,22 @@
 
     function toggleChat() {
         isOpen = !isOpen;
+        const container = document.getElementById('omni-widget-container');
         const box = document.getElementById('omni-widget-box');
+        const launcher = document.getElementById('omni-widget-launcher');
         const badge = document.getElementById('omni-widget-badge');
         
         if (isOpen) {
-            box.classList.add('omni-open');
+            if (container) container.classList.add('omni-open');
+            if (box) box.classList.add('omni-open');
+            if (launcher) launcher.style.display = 'none';
             unreadCount = 0;
-            badge.style.display = 'none';
+            if (badge) badge.style.display = 'none';
             scrollToBottom();
         } else {
-            box.classList.remove('omni-open');
+            if (container) container.classList.remove('omni-open');
+            if (box) box.classList.remove('omni-open');
+            if (launcher) launcher.style.display = 'flex';
         }
     }
 
