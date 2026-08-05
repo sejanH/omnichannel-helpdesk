@@ -8,7 +8,28 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () { return view('welcome'); })->name('home');
 Route::get('/demo', function () { return view('demo'); })->name('demo');
 
+// Uncached Router Endpoint (/widget.js) -> Redirects to the current build's hashed file
 Route::get('/widget.js', function () {
+    $manifestPath = public_path('widget-manifest.json');
+    $hashedFile = null;
+
+    if (file_exists($manifestPath)) {
+        $manifest = json_decode(file_get_contents($manifestPath), true);
+        if (!empty($manifest['file']) && file_exists(public_path($manifest['file']))) {
+            $hashedFile = $manifest['file'];
+        }
+    }
+
+    if ($hashedFile) {
+        return redirect('/' . $hashedFile, 302, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
+            'Access-Control-Allow-Origin' => '*',
+        ]);
+    }
+
+    // Fallback if manifest doesn't exist
     $path = public_path('widget.js');
     if (!file_exists($path)) {
         abort(404);
@@ -21,6 +42,25 @@ Route::get('/widget.js', function () {
         'Access-Control-Allow-Origin' => '*',
     ]);
 });
+
+// Forever-Cached Hashed Asset Route (/widget.{hash}.js)
+Route::get('/widget.{hash}.js', function ($hash) {
+    $filename = "widget.{$hash}.js";
+    $path = public_path($filename);
+
+    if (!file_exists($path)) {
+        $path = public_path('widget.js');
+        if (!file_exists($path)) {
+            abort(404);
+        }
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/javascript; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+        'Access-Control-Allow-Origin' => '*',
+    ]);
+})->where('hash', '[a-f0-9]{8}');
 
 use App\Http\Controllers\DocsController;
 Route::get('/docs/{page?}', [DocsController::class, 'show'])->where('page', '.*')->name('docs.show');

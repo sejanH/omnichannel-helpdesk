@@ -17,6 +17,9 @@
 /public/hot
 /public/storage
 /public/**/*.js
+!/public/widget.js
+!/public/widget-manifest.json
+!/public/widget.*.js
 /public/**/*.css
 /storage/*.key
 /storage/pail
