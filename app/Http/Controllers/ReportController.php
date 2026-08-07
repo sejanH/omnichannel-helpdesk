@@ -16,7 +16,7 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         // Enforce Admin-only access
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('view-reports')) {
             return redirect()->route('tickets')->with('warning', 'Access restricted to administrators.');
         }
 

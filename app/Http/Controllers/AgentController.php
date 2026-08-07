@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -29,10 +31,17 @@ class AgentController extends Controller
             $query->where('status', $status);
         }
 
-        $agents = $query->orderBy('created_at', 'desc')->get();
-        $roles = Role::orderBy('name')->get();
+        $agents = $query->orderBy('created_at', 'desc')->with('permissions')->get();
+        
+        $roles = Cache::rememberForever('roles', function () {
+            return Role::orderBy('name')->get(); // Agent view doesn't need to load Role permissions necessarily, but we'll fetch them normally.
+        });
+        
+        $permissions = Cache::rememberForever('permissions', function () {
+            return Permission::orderBy('name')->get();
+        });
 
-        return view('agents', compact('agents', 'roles'));
+        return view('agents', compact('agents', 'roles', 'permissions'));
     }
 
     /**
@@ -40,7 +49,7 @@ class AgentController extends Controller
      */
     public function store(Request $request)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-agents')) {
             abort(403, 'Unauthorized. Only administrators can create new agent accounts.');
         }
 
@@ -49,6 +58,8 @@ class AgentController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email',
             'role' => 'required|string|exists:roles,slug',
             'password' => 'required|string|min:6',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
         $agent = User::create([
@@ -60,6 +71,10 @@ class AgentController extends Controller
             'avatar' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($validated['name']),
         ]);
 
+        if (isset($validated['permissions'])) {
+            $agent->permissions()->sync($validated['permissions']);
+        }
+
         return redirect()->route('agents.index')->with('success', "Agent {$agent->name} created successfully!");
     }
 
@@ -68,7 +83,7 @@ class AgentController extends Controller
      */
     public function update(Request $request, User $agent)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-agents')) {
             abort(403, 'Unauthorized. Only administrators can update other agent profiles.');
         }
 
@@ -77,6 +92,8 @@ class AgentController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $agent->id,
             'role' => 'required|string|exists:roles,slug',
             'password' => 'nullable|string|min:6',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
         // Prevent admin from removing their own admin role
@@ -94,6 +111,9 @@ class AgentController extends Controller
 
         $agent->avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($validated['name']);
         $agent->save();
+
+        $agent->permissions()->sync($validated['permissions'] ?? []);
+
         $agent->flushUserCache();
 
         return redirect()->route('agents.index')->with('success', "Profile for {$agent->name} updated successfully!");
@@ -104,7 +124,7 @@ class AgentController extends Controller
      */
     public function toggleStatus(User $agent)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-agents')) {
             abort(403, 'Unauthorized. Only administrators can change agent account status.');
         }
 
@@ -140,7 +160,7 @@ class AgentController extends Controller
      */
     public function destroy(User $agent)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-agents')) {
             abort(403, 'Unauthorized. Only administrators can delete agent accounts.');
         }
 

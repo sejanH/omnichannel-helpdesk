@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: omnidesk-app
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "9880:9880" # Web Application Dashboard & Widget APIs (Uncommon Port)
       - "9881:9881" # Real-Time Reverb WebSocket Server (Uncommon Port)

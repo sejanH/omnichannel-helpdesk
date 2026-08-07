@@ -721,7 +721,7 @@
         if (!ticketId || !reverbConfig || !reverbConfig.key) return false;
 
         try {
-            const isHttps = window.location.protocol === 'https:' || reverbConfig.scheme === 'https';
+            const isHttps = window.location.protocol === 'https:';
             const wsProtocol = isHttps ? 'wss://' : 'ws://';
 
             let wsHost = reverbConfig.host;

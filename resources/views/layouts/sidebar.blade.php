@@ -58,25 +58,31 @@
                 <span class="sidebar-text">Agent Roster</span>
             </a>
 
-            @if(auth()->check() && auth()->user()->role === 'admin')
+            @if(auth()->check() && auth()->user()->hasPermissionTo('view-reports'))
             <a href="{{ route('reports.index') }}" title="Reports & Analytics"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('reports.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="chart-bar" class="text-lg shrink-0 text-amber-600" />
                 <span class="sidebar-text">Analytics & Reports</span>
             </a>
+            @endif
 
+            @if(auth()->check() && auth()->user()->hasPermissionTo('manage-canned-responses'))
             <a href="{{ route('canned-responses.index') }}" title="Auto-Responder Templates"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('canned-responses.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="messages" class="text-lg shrink-0 text-purple-600" />
                 <span class="sidebar-text">Canned Responses</span>
             </a>
+            @endif
 
+            @if(auth()->check() && auth()->user()->hasPermissionTo('manage-roles'))
             <a href="{{ route('roles.index') }}" title="Roles & Access"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('roles.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="shield-check" class="text-lg shrink-0 text-rose-600" />
                 <span class="sidebar-text">Roles & Access</span>
             </a>
+            @endif
 
+            @if(auth()->check() && auth()->user()->isAdmin())
             <a href="{{ route('widget-builder.index') }}" title="Widget Builder Studio"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('widget-builder.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="adjustments-horizontal" class="text-lg shrink-0" />
@@ -89,11 +95,13 @@
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('billing.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="credit-card" class="text-lg shrink-0 text-emerald-600" />
                 <span class="sidebar-text">Billing & Plan</span>
-                @if(auth()->check() && auth()->user()->onTrial())
+                @if(auth()->user()->onTrial())
                     <span class="sidebar-text ml-auto text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200">TRIAL</span>
                 @endif
             </a>
+            @endif
 
+            @if(auth()->check() && auth()->user()->hasPermissionTo('delete-tickets'))
             <a href="{{ route('tickets') }}?filter=trash" title="Ticket Trash Bin"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->query('filter') === 'trash' ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="trash" class="text-lg shrink-0 text-rose-600" />

@@ -159,7 +159,7 @@
                                         </a>
                                     @elseif(auth()->user()->role === 'admin')
                                         <!-- Edit Agent Profile & Role (Admin Only) -->
-                                        <button type="button" onclick="openEditAgentModal({{ json_encode(['id' => $agent->id, 'name' => $agent->name, 'email' => $agent->email, 'role' => $agent->role]) }})" title="Edit Agent Profile" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-indigo-600 text-slate-700 hover:text-white border border-slate-200 hover:border-indigo-500 transition flex items-center gap-1 cursor-pointer">
+                                        <button type="button" onclick="openEditAgentModal({{ json_encode(['id' => $agent->id, 'name' => $agent->name, 'email' => $agent->email, 'role' => $agent->role, 'permissions' => $agent->permissions]) }})" title="Edit Agent Profile" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-indigo-600 text-slate-700 hover:text-white border border-slate-200 hover:border-indigo-500 transition flex items-center gap-1 cursor-pointer">
                                             <i class="ti ti-edit text-xs"></i> Edit
                                         </button>
 
@@ -241,6 +241,19 @@
                 </div>
             </div>
 
+            <div class="mt-4">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Special Permissions (Overrides)</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    @foreach($permissions as $permission)
+                    <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                        <span>{{ $permission->name }}</span>
+                    </label>
+                    @endforeach
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">These will be directly assigned to the user in addition to their role permissions.</p>
+            </div>
+
             <div class="pt-2 flex items-center justify-end gap-2">
                 <button type="button" onclick="closeCreateAgentModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Cancel</button>
                 <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20">Create Agent</button>
@@ -289,6 +302,19 @@
                 </div>
             </div>
 
+            <div class="mt-4">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Special Permissions (Overrides)</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    @foreach($permissions as $permission)
+                    <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="edit-agent-permission-checkbox rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                        <span>{{ $permission->name }}</span>
+                    </label>
+                    @endforeach
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">These will be directly assigned to the user in addition to their role permissions.</p>
+            </div>
+
             <div class="pt-2 flex items-center justify-end gap-2">
                 <button type="button" onclick="closeEditAgentModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Cancel</button>
                 <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20">Save Changes</button>
@@ -311,6 +337,16 @@
         document.getElementById('edit-agent-name').value = agent.name;
         document.getElementById('edit-agent-email').value = agent.email;
         document.getElementById('edit-agent-role').value = agent.role;
+        
+        let permissions = [];
+        if (agent.permissions) {
+            permissions = agent.permissions.map(p => p.id);
+        }
+        
+        document.querySelectorAll('.edit-agent-permission-checkbox').forEach(cb => {
+            cb.checked = permissions.includes(parseInt(cb.value));
+        });
+        
         document.getElementById('edit-agent-modal').classList.remove('hidden');
     }
     function closeEditAgentModal() {

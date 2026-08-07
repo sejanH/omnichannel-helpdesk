@@ -11,14 +11,11 @@ class WidgetBuilderController extends Controller
     /**
      * Enforce Admin Authorization for Widget Builder
      */
-    public function __construct()
+    private function checkAdmin()
     {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->check() || auth()->user()->role !== 'admin') {
-                abort(403, 'Unauthorized. Only administrators can access the Multi-Widget Builder Studio.');
-            }
-            return $next($request);
-        });
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can access the Multi-Widget Builder Studio.');
+        }
     }
 
     /**
@@ -26,6 +23,8 @@ class WidgetBuilderController extends Controller
      */
     public function index(Request $request)
     {
+        $this->checkAdmin();
+
         $channels = Channel::where('type', 'web_chat')->get();
 
         // If no web chat channel exists, create a default one
@@ -66,6 +65,8 @@ class WidgetBuilderController extends Controller
      */
     public function store(Request $request)
     {
+        $this->checkAdmin();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'widget_color' => 'required|string|max:30',
@@ -99,6 +100,8 @@ class WidgetBuilderController extends Controller
      */
     public function update(Request $request, Channel $channel)
     {
+        $this->checkAdmin();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'is_active' => 'nullable|boolean',
@@ -150,6 +153,8 @@ class WidgetBuilderController extends Controller
      */
     public function destroy(Channel $channel)
     {
+        $this->checkAdmin();
+
         if ($channel->type !== 'web_chat') {
             return back()->withErrors(['error' => 'Only web chat channels can be deleted here.']);
         }

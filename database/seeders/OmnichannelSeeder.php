@@ -54,6 +54,9 @@ class OmnichannelSeeder extends Seeder
             ]
         );
 
+        // 1.5 Call Permission Seeder
+        $this->call(PermissionSeeder::class);
+
         // 2. Channels
         $webChannel = Channel::firstOrCreate(
             ['slug' => 'web-live-chat'],

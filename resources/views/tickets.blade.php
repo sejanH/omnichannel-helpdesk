@@ -536,15 +536,23 @@
             $(document).on('click', '.ticket-card', function (e) {
                 const ticketId = $(this).data('ticket-id');
 
-                // If it was a real click (not triggered programmatically), update URL preserving query params
-                if (e.originalEvent) {
+                if (!ticketId) return;
+
+                // Responsive mobile view switcher: hide inbox column and show chat column
+                if (window.innerWidth < 768) {
+                    $('#inbox-column').addClass('hidden');
+                    $('#chat-column').removeClass('hidden').addClass('flex');
+                }
+
+                // If triggered by explicit click event, push state to browser URL
+                if (e && e.originalEvent) {
                     const url = new URL(window.location.href);
                     url.pathname = '/tickets/' + ticketId;
                     window.history.pushState({}, '', url.pathname + url.search);
                 }
                 
-                $('.ticket-card').removeClass('border-indigo-500 bg-slate-800/30').addClass('border-transparent');
-                $(this).removeClass('border-transparent').addClass('border-indigo-500 bg-slate-800/30');
+                $('.ticket-card').removeClass('border-indigo-600 bg-indigo-50/70 shadow-2xs').addClass('border-transparent');
+                $(this).removeClass('border-transparent').addClass('border-indigo-600 bg-indigo-50/70 shadow-2xs');
 
                 // Hide unread badge when clicked and update data attribute
                 $(this).attr('data-unread', 'false');
@@ -626,6 +634,25 @@
 
             // Initial filtering execution on load
             applyFilteringAndSyncUrl();
+
+            // Auto-select initial ticket on page load (either specified in URL /tickets/{id} or the first visible card)
+            const pathParts = window.location.pathname.split('/');
+            let targetTicketId = null;
+            if (pathParts.length >= 3 && pathParts[1] === 'tickets' && /^\d+$/.test(pathParts[2])) {
+                targetTicketId = pathParts[2];
+            } else {
+                const firstCard = $('.ticket-card:visible').first();
+                if (firstCard.length > 0) {
+                    targetTicketId = firstCard.data('ticket-id');
+                }
+            }
+
+            if (targetTicketId) {
+                const targetCard = $('.ticket-card[data-ticket-id="' + targetTicketId + '"]');
+                if (targetCard.length > 0) {
+                    targetCard.trigger('click');
+                }
+            }
 
             // Load Ticket Messages via AJAX
             function loadTicketMessages(ticketId) {
@@ -799,12 +826,6 @@
                 if (container) container.scrollTop = container.scrollHeight;
             }
 
-            // Canned Response Shortcut Injector
-            $(document).on('click', '.btn-canned', function () {
-                const content = $(this).data('content');
-                $('#message-input').val(content);
-            });
-
             // Handle Keyboard Shortcuts for Textarea: Enter to Send, Shift/Ctrl/Cmd+Enter for Newline
             $('#message-input').on('keydown', function (e) {
                 if (e.key === 'Enter') {
@@ -860,15 +881,65 @@
 
                         const pill = card.find('.ticket-status-pill');
                         if (newStatus === 'resolved') {
-                            pill.html('✓ Resolved').attr('class', 'ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30');
+                            pill.html('✓ Resolved').attr('class', 'ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200');
                         } else {
-                            pill.html('Open').attr('class', 'ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30');
+                            pill.html('Open').attr('class', 'ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200');
                         }
 
                         // Refresh active ticket header & button state
                         loadTicketMessages(activeTicketId);
                     }
                 });
+            });
+
+            // Dynamic Canned Response Variable Replacement Engine
+            function parseCannedResponseVariables(rawContent) {
+                if (!rawContent) return '';
+
+                const agentName = @json(auth()->user()->name ?? 'Agent');
+                const agentEmail = @json(auth()->user()->email ?? '');
+                const customerName = $('#active-contact-name').text().trim() || 'Customer';
+                const ticketNumber = $('#active-ticket-number').text().trim() || '';
+                const ticketSubject = $('#active-ticket-subject').text().trim() || '';
+                const companyName = 'OmniHelp Desk';
+
+                let parsed = rawContent;
+                
+                // Agent variables: {agent.name}, {agent_name}, {agent.email}
+                parsed = parsed.replace(/\{agent\.name\}/gi, agentName)
+                               .replace(/\{agent_name\}/gi, agentName)
+                               .replace(/\{agent\.email\}/gi, agentEmail);
+
+                // Customer / Contact variables: {customer.name}, {contact.name}, {customer_name}
+                parsed = parsed.replace(/\{customer\.name\}/gi, customerName)
+                               .replace(/\{contact\.name\}/gi, customerName)
+                               .replace(/\{customer_name\}/gi, customerName);
+
+                // Ticket variables: {ticket.number}, {ticket.id}, {ticket_number}, {ticket.subject}
+                parsed = parsed.replace(/\{ticket\.number\}/gi, ticketNumber)
+                               .replace(/\{ticket\.id\}/gi, ticketNumber)
+                               .replace(/\{ticket_number\}/gi, ticketNumber)
+                               .replace(/\{ticket\.subject\}/gi, ticketSubject);
+
+                // Company variables: {company.name}, {company_name}
+                parsed = parsed.replace(/\{company\.name\}/gi, companyName)
+                               .replace(/\{company_name\}/gi, companyName);
+
+                return parsed;
+            }
+
+            // Canned Response Shortcut Injector with Dynamic Variable Resolution
+            $(document).on('click', '.btn-canned', function () {
+                const rawContent = $(this).data('content');
+                const parsedContent = parseCannedResponseVariables(rawContent);
+                
+                const currentVal = $('#message-input').val();
+                if (currentVal && currentVal.trim().length > 0) {
+                    $('#message-input').val(currentVal + '\n' + parsedContent);
+                } else {
+                    $('#message-input').val(parsedContent);
+                }
+                $('#message-input').focus();
             });
 
             // --- WIDGET BUILDER STUDIO LOGIC ---

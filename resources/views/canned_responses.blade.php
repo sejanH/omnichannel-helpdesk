@@ -130,7 +130,21 @@
                 
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Message Content</label>
-                    <textarea name="content" required rows="4" placeholder="Hello! How can we assist you today?" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition resize-none"></textarea>
+                    <textarea name="content" id="create-content" required rows="4" placeholder="Hello {customer.name}! My name is {agent.name} from {company.name}." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition resize-none"></textarea>
+                </div>
+
+                <!-- Dynamic Variables Quick Pills -->
+                <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 space-y-1.5">
+                    <div class="text-[11px] font-bold text-indigo-900 flex items-center gap-1.5">
+                        <i class="ti ti-variable text-indigo-600"></i>
+                        <span>Dynamic Variables (Click to insert):</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 text-[10px]">
+                        <button type="button" onclick="insertVariable('create-content', '{agent.name}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{agent.name}</button>
+                        <button type="button" onclick="insertVariable('create-content', '{customer.name}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{customer.name}</button>
+                        <button type="button" onclick="insertVariable('create-content', '{ticket.number}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{ticket.number}</button>
+                        <button type="button" onclick="insertVariable('create-content', '{company.name}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{company.name}</button>
+                    </div>
                 </div>
             </div>
             
@@ -171,6 +185,20 @@
                     <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Message Content</label>
                     <textarea name="content" id="edit-content" required rows="4" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition resize-none"></textarea>
                 </div>
+
+                <!-- Dynamic Variables Quick Pills (Edit Modal) -->
+                <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 space-y-1.5">
+                    <div class="text-[11px] font-bold text-indigo-900 flex items-center gap-1.5">
+                        <i class="ti ti-variable text-indigo-600"></i>
+                        <span>Dynamic Variables (Click to insert):</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 text-[10px]">
+                        <button type="button" onclick="insertVariable('edit-content', '{agent.name}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{agent.name}</button>
+                        <button type="button" onclick="insertVariable('edit-content', '{customer.name}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{customer.name}</button>
+                        <button type="button" onclick="insertVariable('edit-content', '{ticket.number}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{ticket.number}</button>
+                        <button type="button" onclick="insertVariable('edit-content', '{company.name}')" class="px-2 py-0.5 bg-white border border-indigo-200 rounded text-indigo-700 font-mono hover:bg-indigo-100 transition cursor-pointer">{company.name}</button>
+                    </div>
+                </div>
             </div>
             
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
@@ -207,6 +235,16 @@
     function closeEditModal() {
         document.getElementById('edit-modal').classList.add('hidden');
         document.getElementById('edit-modal').classList.remove('flex');
+    }
+    function insertVariable(targetId, variableTag) {
+        const textarea = document.getElementById(targetId);
+        if (!textarea) return;
+        const start = textarea.selectionStart || textarea.value.length;
+        const end = textarea.selectionEnd || textarea.value.length;
+        const text = textarea.value;
+        textarea.value = text.substring(0, start) + variableTag + text.substring(end);
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = start + variableTag.length;
     }
 </script>
 @endsection

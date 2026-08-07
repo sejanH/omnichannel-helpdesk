@@ -128,7 +128,11 @@ class OmnichannelController extends Controller
             }
         }
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'message' => $message]);
     }
@@ -159,7 +163,11 @@ class OmnichannelController extends Controller
             'is_internal_note' => true,
         ]);
         
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'ticket' => $ticket, 'message' => $message]);
     }
@@ -189,7 +197,11 @@ class OmnichannelController extends Controller
             'is_internal_note' => true,
         ]);
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

@@ -9,7 +9,7 @@ class CannedResponseController extends Controller
 {
     public function index()
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-canned-responses')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -19,7 +19,7 @@ class CannedResponseController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-canned-responses')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -36,7 +36,7 @@ class CannedResponseController extends Controller
 
     public function update(Request $request, CannedResponse $cannedResponse)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-canned-responses')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -53,7 +53,7 @@ class CannedResponseController extends Controller
 
     public function destroy(CannedResponse $cannedResponse)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->user()->hasPermissionTo('manage-canned-responses')) {
             abort(403, 'Unauthorized action.');
         }
 

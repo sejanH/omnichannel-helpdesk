@@ -215,7 +215,11 @@ class WidgetController extends Controller
                 'last_activity_at' => now(),
             ]);
 
-            broadcast(new \App\Events\TicketCreated($ticket));
+            try {
+                broadcast(new \App\Events\TicketCreated($ticket));
+            } catch (\Throwable $e) {
+                \Log::warning('Broadcast failed for TicketCreated: ' . $e->getMessage());
+            }
         }
 
         $messages = Message::where('ticket_id', $ticket->id)
@@ -288,7 +292,11 @@ class WidgetController extends Controller
             'status' => $ticket->status === 'resolved' || $ticket->status === 'closed' ? 'open' : $ticket->status,
         ]);
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcast failed for MessageSent: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -333,7 +341,11 @@ class WidgetController extends Controller
             'is_internal_note' => true,
         ]);
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcast failed for MessageSent (rating): ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

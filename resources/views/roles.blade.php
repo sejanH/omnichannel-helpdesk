@@ -76,7 +76,7 @@
                             </td>
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button onclick="openEditModal({{ $role->id }}, '{{ addslashes($role->name) }}', '{{ $role->slug }}')" title="Edit Role" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer">
+                                    <button onclick="openEditModal({{ $role->id }}, '{{ addslashes($role->name) }}', '{{ $role->slug }}', {{ $role->permissions->pluck('id')->toJson() }})" title="Edit Role" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer">
                                         <i class="ti ti-edit text-lg"></i>
                                     </button>
                                     @if(!in_array($role->slug, ['admin', 'supervisor', 'agent']))
@@ -123,6 +123,18 @@
                     <input type="text" name="name" required placeholder="e.g. Content Manager" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
                     <p class="text-[10px] text-slate-400 mt-1">A system slug will be generated automatically.</p>
                 </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Permissions</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        @foreach($permissions as $permission)
+                        <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                            <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                            <span>{{ $permission->name }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
             
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
@@ -155,6 +167,18 @@
                 <div id="edit-warning" class="hidden text-[10px] text-amber-600 bg-amber-50 p-2 rounded">
                     Warning: Changing a core system role's name is not recommended and might cause confusion.
                 </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Permissions</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        @foreach($permissions as $permission)
+                        <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                            <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="edit-permission-checkbox rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                            <span>{{ $permission->name }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
             
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
@@ -176,7 +200,7 @@
         document.getElementById('create-modal').classList.remove('flex');
     }
 
-    function openEditModal(id, name, slug) {
+    function openEditModal(id, name, slug, permissionsArray = []) {
         const form = document.getElementById('edit-form');
         form.action = `/roles/${id}`;
         
@@ -187,6 +211,10 @@
         } else {
             document.getElementById('edit-warning').classList.add('hidden');
         }
+
+        document.querySelectorAll('.edit-permission-checkbox').forEach(cb => {
+            cb.checked = permissionsArray.includes(parseInt(cb.value));
+        });
 
         document.getElementById('edit-modal').classList.remove('hidden');
         document.getElementById('edit-modal').classList.add('flex');
