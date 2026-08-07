@@ -36,6 +36,35 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function roleModel()
+    {
+        return $this->belongsTo(Role::class, 'role', 'slug');
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
+    }
+
+    public function hasPermissionTo(string $permissionSlug): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // Check if assigned directly to user
+        if ($this->permissions()->where('slug', $permissionSlug)->exists()) {
+            return true;
+        }
+
+        // Check if assigned via role
+        if ($this->roleModel && $this->roleModel->permissions()->where('slug', $permissionSlug)->exists()) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function assignedTickets()
     {
         return $this->hasMany(Ticket::class, 'assigned_agent_id');
@@ -104,6 +133,14 @@ class User extends Authenticatable
         return \Illuminate\Support\Facades\Cache::remember("user_{$id}", 3600, function () use ($id) {
             return static::find($id);
         });
+    }
+
+    /**
+     * Check if user is Administrator
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 
     /**

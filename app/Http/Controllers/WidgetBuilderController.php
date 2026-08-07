@@ -9,6 +9,19 @@ use Illuminate\Support\Str;
 class WidgetBuilderController extends Controller
 {
     /**
+     * Enforce Admin Authorization for Widget Builder
+     */
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!auth()->check() || auth()->user()->role !== 'admin') {
+                abort(403, 'Unauthorized. Only administrators can access the Multi-Widget Builder Studio.');
+            }
+            return $next($request);
+        });
+    }
+
+    /**
      * Display the Widget Builder studio & listing of widgets.
      */
     public function index(Request $request)
@@ -24,13 +37,13 @@ class WidgetBuilderController extends Controller
                 'icon' => 'globe',
                 'is_active' => true,
                 'configuration' => [
-                    'widget_color' => '#6366f1',
+                    'widget_color' => '#4f46e5',
                     'position' => 'bottom-right',
                     'title' => 'Customer Support',
                     'subtitle' => 'We typically reply in under 5 minutes',
                     'welcome_message' => 'Hello! How can we assist you today?',
                     'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=OmniHelp',
-                    'theme' => 'dark',
+                    'theme' => 'light',
                     'launcher_icon' => 'message-dots',
                     'require_prechat' => false,
                 ],
@@ -71,7 +84,7 @@ class WidgetBuilderController extends Controller
                 'subtitle' => 'We typically reply in a few minutes',
                 'welcome_message' => 'Hello! How can we help you?',
                 'logo_url' => 'https://api.dicebear.com/7.x/bottts/svg?seed=' . urlencode($validated['name']),
-                'theme' => 'dark',
+                'theme' => 'light',
                 'launcher_icon' => 'message-dots',
                 'require_prechat' => false,
             ],

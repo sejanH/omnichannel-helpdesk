@@ -1,13 +1,13 @@
 @import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 
-/* Custom Design Tokens & Variables */
-$primary: #6366f1;
-$primary-dark: #4f46e5;
-$secondary: #06b6d4;
+/* Custom Light Theme Design Tokens & Variables */
+$primary: #4f46e5;
+$primary-dark: #4338ca;
+$secondary: #0891b2;
 $accent: #f59e0b;
-$dark-bg: #0f172a;
-$card-bg: #1e293b;
-$border-color: #334155;
+$light-bg: #f8fafc;
+$card-bg: #ffffff;
+$border-color: #e2e8f0;
 
 /* SCSS Mixins */
 @mixin flex-center {
@@ -17,33 +17,32 @@ $border-color: #334155;
 }
 
 @mixin glassmorphism {
-    background: rgba(30, 41, 59, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Global Custom Styles */
 body {
-    background-color: $dark-bg;
-    color: #f8fafc;
+    background-color: $light-bg;
+    color: #0f172a;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
+/* Custom Light Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: #0f172a;
+    background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: #cbd5e1;
     border-radius: 9999px;
     &:hover {
-        background: #475569;
+        background: #94a3b8;
     }
 }
 
@@ -52,7 +51,7 @@ body {
     @include glassmorphism;
 }
 
-/* Channel Badges */
+/* Channel Badges - Light Mode Optimized */
 .badge-channel {
     display: inline-flex;
     align-items: center;
@@ -65,33 +64,33 @@ body {
     letter-spacing: 0.05em;
 
     &.badge-web {
-        background-color: rgba(99, 102, 241, 0.2);
-        color: #818cf8;
-        border: 1px solid rgba(99, 102, 241, 0.4);
+        background-color: #e0e7ff;
+        color: #4338ca;
+        border: 1px solid #c7d2fe;
     }
     &.badge-whatsapp {
-        background-color: rgba(34, 197, 94, 0.2);
-        color: #4ade80;
-        border: 1px solid rgba(34, 197, 94, 0.4);
+        background-color: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
     }
     &.badge-email {
-        background-color: rgba(234, 179, 8, 0.2);
-        color: #fde047;
-        border: 1px solid rgba(234, 179, 8, 0.4);
+        background-color: #fef9c3;
+        color: #a16207;
+        border: 1px solid #fef08a;
     }
     &.badge-facebook {
-        background-color: rgba(59, 130, 246, 0.2);
-        color: #60a5fa;
-        border: 1px solid rgba(59, 130, 246, 0.4);
+        background-color: #dbeafe;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
     }
     &.badge-telegram {
-        background-color: rgba(6, 182, 212, 0.2);
-        color: #22d3ee;
-        border: 1px solid rgba(6, 182, 212, 0.4);
+        background-color: #cff4fc;
+        color: #0e7490;
+        border: 1px solid #a5f3fc;
     }
 }
 
-/* Priority Badges */
+/* Priority Badges - Light Mode Optimized */
 .badge-priority {
     padding: 0.2rem 0.5rem;
     border-radius: 0.375rem;
@@ -100,24 +99,24 @@ body {
     text-transform: uppercase;
 
     &.priority-urgent {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.4);
+        background-color: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
     }
     &.priority-high {
-        background-color: rgba(249, 115, 22, 0.2);
-        color: #fb923c;
-        border: 1px solid rgba(249, 115, 22, 0.4);
+        background-color: #ffedd5;
+        color: #c2410c;
+        border: 1px solid #fdba74;
     }
     &.priority-medium {
-        background-color: rgba(234, 179, 8, 0.2);
-        color: #facc15;
-        border: 1px solid rgba(234, 179, 8, 0.4);
+        background-color: #fef9c3;
+        color: #854d0e;
+        border: 1px solid #fef08a;
     }
     &.priority-low {
-        background-color: rgba(148, 163, 184, 0.2);
-        color: #cbd5e1;
-        border: 1px solid rgba(148, 163, 184, 0.4);
+        background-color: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
     }
 }
 
@@ -125,15 +124,15 @@ body {
 @keyframes pulse-ring {
     0% {
         transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
     }
     70% {
         transform: scale(1);
-        box-shadow: 0 0 0 14px rgba(99, 102, 241, 0);
+        box-shadow: 0 0 0 14px rgba(79, 70, 229, 0);
     }
     100% {
         transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
     }
 }
 
@@ -146,7 +145,7 @@ body {
     display: inline-block;
     width: 6px;
     height: 6px;
-    background-color: #94a3b8;
+    background-color: #64748b;
     border-radius: 50%;
     margin: 0 2px;
     animation: typing-bounce 1.4s infinite ease-in-out both;
@@ -161,36 +160,47 @@ body {
     40% { transform: scale(1); }
 }
 
-/* Message Bubbles */
+/* Message Bubbles - Light Mode Optimized */
 .chat-bubble {
-    max-width: 80%;
     padding: 0.75rem 1rem;
     border-radius: 1rem;
-    position: relative;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    max-width: 88%;
     word-break: break-word;
 
+    @media (min-width: 640px) {
+        max-width: 75%;
+    }
+
     &.incoming {
-        background-color: #334155;
-        color: #f8fafc;
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
         border-bottom-left-radius: 0.25rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     &.outgoing {
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
         color: #ffffff;
         border-bottom-right-radius: 0.25rem;
         margin-left: auto;
+        box-shadow: 0 1px 3px 0 rgba(79, 70, 229, 0.2);
     }
 
     &.internal-note {
-        background: rgba(245, 158, 11, 0.15);
-        border: 1px dashed rgba(245, 158, 11, 0.4);
-        color: #fde047;
+        background: #fffbeb;
+        border: 1px dashed #f59e0b;
+        color: #78350f;
+        max-width: 100%;
     }
 }
 
-/* Sidebar Collapsible & Responsive Layout Styles */
+/* Sidebar Collapsible & Responsive Layout Styles - Light Mode */
 #main-sidebar {
+    background-color: #ffffff !important;
+    border-right-color: #e2e8f0 !important;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     .sidebar-text {
@@ -240,91 +250,10 @@ body {
     }
 }
 
-/* ==========================================================================
-   Theme-Oriented Error Pages & Status Utilities (OmniDesk)
-   ========================================================================== */
-
-/* Error Background Animations & Overlays */
-.error-bg-glow {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.25;
-    pointer-events: none;
-    z-index: 0;
-    animation: floatGlow 12s ease-in-out infinite alternate;
-}
-
-.error-grid-overlay {
-    background-size: 40px 40px;
-    background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-}
-
-@keyframes floatGlow {
-    0% {
-        transform: translate(0, 0) scale(1);
-    }
-    50% {
-        transform: translate(30px, -40px) scale(1.1);
-    }
-    100% {
-        transform: translate(-30px, 30px) scale(0.95);
-    }
-}
-
-/* Floating Animation for Graphics/Icons */
-.animate-float-slow {
-    animation: floatSlow 6s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-    animation: pulseGlow 3s ease-in-out infinite;
-}
-
-.animate-spin-slow {
-    animation: spin 16s linear infinite;
-}
-
-@keyframes floatSlow {
-    0%, 100% {
-        transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-12px) rotate(2deg);
-    }
-}
-
-@keyframes pulseGlow {
-    0%, 100% {
-        opacity: 0.6;
-        filter: drop-shadow(0 0 15px currentColor);
-    }
-    50% {
-        opacity: 1;
-        filter: drop-shadow(0 0 35px currentColor);
-    }
-}
-
 /* Diagnostic Code Block styling */
 .diagnostic-terminal {
-    background-color: rgba(15, 23, 42, 0.95);
-    border: 1px solid rgba(51, 65, 85, 0.8);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
-
-/* Error Code Badges & Accents */
-.error-badge-4xx {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.error-badge-5xx {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-

@@ -74,6 +74,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\CannedResponseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WidgetBuilderController;
 
@@ -98,6 +99,7 @@ Route::middleware('auth')->group(function () {
     // Agent & CRM User Management Routes
     Route::get('/agents', [AgentController::class, 'index'])->name('agents.index');
     Route::post('/agents', [AgentController::class, 'store'])->name('agents.store');
+    Route::put('/agents/{agent}', [AgentController::class, 'update'])->name('agents.update');
     Route::post('/agents/{agent}/toggle', [AgentController::class, 'toggleStatus'])->name('agents.toggle');
     Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
 
@@ -112,7 +114,29 @@ Route::middleware('auth')->group(function () {
     Route::post('/widget-builder', [WidgetBuilderController::class, 'store'])->name('widget-builder.store');
     Route::put('/widget-builder/{channel}', [WidgetBuilderController::class, 'update'])->name('widget-builder.update');
     Route::delete('/widget-builder/{channel}', [WidgetBuilderController::class, 'destroy'])->name('widget-builder.destroy');
+
+    // Ticket Metadata & Tag Update Route
+    Route::patch('/tickets/{ticket}/metadata', [OmnichannelController::class, 'updateTicketMetadata'])->name('tickets.metadata');
+
+    // Knowledge Base FAQ Portal Management Routes
+    Route::post('/kb', [\App\Http\Controllers\KnowledgeBaseController::class, 'store'])->name('kb.store');
+    Route::delete('/kb/{article}', [\App\Http\Controllers\KnowledgeBaseController::class, 'destroy'])->name('kb.destroy');
+
+    // Ticket Trash Bin & Soft Delete Routes (Admin Restricted)
+    Route::delete('/tickets/{ticket}', [OmnichannelController::class, 'destroyTicket'])->name('tickets.destroy');
+    Route::post('/tickets/{id}/restore', [OmnichannelController::class, 'restoreTicket'])->name('tickets.restore');
+    Route::delete('/tickets/{id}/force-delete', [OmnichannelController::class, 'forceDeleteTicket'])->name('tickets.force_delete');
+
+    // Canned Responses Management
+    Route::resource('canned-responses', CannedResponseController::class)->except(['create', 'show', 'edit']);
+
+    // Custom Roles Management
+    Route::resource('roles', \App\Http\Controllers\RoleController::class)->except(['create', 'show', 'edit']);
 });
+
+// Public Knowledge Base Portal Routes
+Route::get('/kb', [\App\Http\Controllers\KnowledgeBaseController::class, 'index'])->name('kb.index');
+Route::get('/kb/{slug}', [\App\Http\Controllers\KnowledgeBaseController::class, 'show'])->name('kb.show');
 
 // Stripe Webhook Endpoint (Exempt from CSRF)
 Route::post('/stripe/webhook', [BillingController::class, 'stripeWebhook'])->name('stripe.webhook');

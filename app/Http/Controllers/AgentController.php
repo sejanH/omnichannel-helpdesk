@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,19 +30,24 @@ class AgentController extends Controller
         }
 
         $agents = $query->orderBy('created_at', 'desc')->get();
+        $roles = Role::orderBy('name')->get();
 
-        return view('agents', compact('agents'));
+        return view('agents', compact('agents', 'roles'));
     }
 
     /**
-     * Store a newly created Agent / CRM team member.
+     * Store a newly created Agent / CRM team member (Admin Only).
      */
     public function store(Request $request)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can create new agent accounts.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'role' => 'required|string|in:agent,supervisor,admin',
+            'role' => 'required|string|exists:roles,slug',
             'password' => 'required|string|min:6',
         ]);
 
@@ -58,10 +64,50 @@ class AgentController extends Controller
     }
 
     /**
-     * Toggle Agent Account Status (Activate / Deactivate & Invalidate Sessions).
+     * Update an agent's profile details (Admin Only).
+     */
+    public function update(Request $request, User $agent)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can update other agent profiles.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $agent->id,
+            'role' => 'required|string|exists:roles,slug',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        // Prevent admin from removing their own admin role
+        if (auth()->id() === $agent->id && $validated['role'] !== 'admin') {
+            return back()->withErrors(['error' => 'You cannot remove administrator privileges from your own account.']);
+        }
+
+        $agent->name = $validated['name'];
+        $agent->email = strtolower($validated['email']);
+        $agent->role = $validated['role'];
+
+        if (!empty($validated['password'])) {
+            $agent->password = Hash::make($validated['password']);
+        }
+
+        $agent->avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($validated['name']);
+        $agent->save();
+        $agent->flushUserCache();
+
+        return redirect()->route('agents.index')->with('success', "Profile for {$agent->name} updated successfully!");
+    }
+
+    /**
+     * Toggle Agent Account Status (Admin Only).
      */
     public function toggleStatus(User $agent)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can change agent account status.');
+        }
+
         // Prevent admin deactivating their own active account
         if (auth()->id() === $agent->id) {
             return back()->withErrors(['error' => 'You cannot deactivate your own active session account.']);
@@ -90,10 +136,14 @@ class AgentController extends Controller
     }
 
     /**
-     * Delete Agent Account
+     * Delete Agent Account (Admin Only).
      */
     public function destroy(User $agent)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can delete agent accounts.');
+        }
+
         if (auth()->id() === $agent->id) {
             return back()->withErrors(['error' => 'You cannot delete your own account.']);
         }

@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use App\Models\CannedResponse;
 use App\Models\Channel;
 use App\Models\Contact;
+use App\Models\KnowledgeBaseArticle;
 use App\Models\Message;
+use App\Models\Role;
 use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\User;
@@ -16,6 +18,11 @@ class OmnichannelSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Create Roles
+        Role::firstOrCreate(['slug' => 'admin'], ['name' => 'Administrator']);
+        Role::firstOrCreate(['slug' => 'supervisor'], ['name' => 'Supervisor']);
+        Role::firstOrCreate(['slug' => 'agent'], ['name' => 'Agent']);
+
         // 1. Create Agents
         $admin = User::firstOrCreate(
             ['email' => 'admin@helpdesk.com'],
@@ -58,8 +65,8 @@ class OmnichannelSeeder extends Seeder
                 'configuration' => [
                     'title' => 'Customer Support',
                     'welcome_message' => 'Hello! How can we assist you today?',
-                    'widget_color' => '#6366f1',
-                    'theme' => 'dark',
+                    'widget_color' => '#4f46e5',
+                    'theme' => 'light',
                     'launcher_position' => 'right',
                     'require_email' => true,
                 ],
@@ -151,14 +158,40 @@ class OmnichannelSeeder extends Seeder
         ]);
         CannedResponse::firstOrCreate(['shortcut' => '/pricing'], [
             'title' => 'Pricing Information',
-            'content' => 'Our Starter plan is $29/mo, Business plan is $79/mo, and Enterprise plan includes custom integrations. Let me know if you would like a demo!',
+            'content' => 'Our Starter plan is $49/mo, Business plan is $149/mo, and Enterprise plan is $299/mo. Let me know if you would like a demo!',
         ]);
         CannedResponse::firstOrCreate(['shortcut' => '/refund'], [
             'title' => 'Refund Policy',
             'content' => 'We offer a 30-day money-back guarantee. I will initiate the refund request for your account immediately.',
         ]);
 
-        // 5. Contacts
+        // 5. Knowledge Base FAQ Articles
+        KnowledgeBaseArticle::firstOrCreate(['slug' => 'how-to-connect-whatsapp-business'], [
+            'title' => 'How to Connect WhatsApp Business API',
+            'category' => 'Integrations',
+            'content' => 'Follow these steps to connect Meta WhatsApp Business Cloud API to OmniHelp...',
+            'views_count' => 142,
+            'is_published' => true,
+            'author_id' => $admin->id,
+        ]);
+        KnowledgeBaseArticle::firstOrCreate(['slug' => 'embed-live-chat-widget-on-website'], [
+            'title' => 'Embedding Live Chat Widget on Your Website',
+            'category' => 'Widget Setup',
+            'content' => 'Copy the widget script snippet from Multi-Widget Builder Studio and paste before </body> tag...',
+            'views_count' => 289,
+            'is_published' => true,
+            'author_id' => $admin->id,
+        ]);
+        KnowledgeBaseArticle::firstOrCreate(['slug' => 'understanding-sla-policies'], [
+            'title' => 'Understanding SLA Response & Resolution Target Timers',
+            'category' => 'Helpdesk Policies',
+            'content' => 'SLA targets ensure your agents respond to urgent tickets within 15 minutes and resolved on time...',
+            'views_count' => 95,
+            'is_published' => true,
+            'author_id' => $admin->id,
+        ]);
+
+        // 6. Contacts
         $contact1 = Contact::firstOrCreate(['email' => 'michael.scott@dundermifflin.com'], [
             'name' => 'Michael Scott',
             'phone' => '+15550192831',
@@ -183,12 +216,15 @@ class OmnichannelSeeder extends Seeder
             'notes' => 'Testing live chat widget integrations.',
         ]);
 
-        // 6. Tickets & Messages
+        // 7. Tickets & Messages
         // Ticket 1: Web Chat (Urgent)
         $t1 = Ticket::firstOrCreate(['ticket_number' => 'TCK-1001'], [
             'subject' => 'Payment Failed on Checkout Page',
             'status' => 'open',
             'priority' => 'urgent',
+            'tags' => ['Payment', 'VIP'],
+            'category' => 'Billing',
+            'due_at' => now()->addHours(2),
             'channel_id' => $webChannel->id,
             'contact_id' => $contact1->id,
             'assigned_agent_id' => $agentSarah->id,
@@ -223,11 +259,14 @@ class OmnichannelSeeder extends Seeder
             'created_at' => now()->subMinutes(10),
         ]);
 
-        // Ticket 2: WhatsApp (High)
+        // Ticket 2: WhatsApp (High - Overdue SLA for demo)
         $t2 = Ticket::firstOrCreate(['ticket_number' => 'TCK-1002'], [
             'subject' => 'WhatsApp Order Status Inquiry',
             'status' => 'in_progress',
             'priority' => 'high',
+            'tags' => ['Shipping', 'WhatsApp'],
+            'category' => 'Orders',
+            'due_at' => now()->subMinutes(30),
             'channel_id' => $whatsappChannel->id,
             'contact_id' => $contact2->id,
             'assigned_agent_id' => $admin->id,
@@ -257,6 +296,9 @@ class OmnichannelSeeder extends Seeder
             'subject' => 'Feature Request: Dark mode for mobile SDK',
             'status' => 'open',
             'priority' => 'medium',
+            'tags' => ['Feature Request', 'Mobile'],
+            'category' => 'Technical',
+            'due_at' => now()->addHours(12),
             'channel_id' => $emailChannel->id,
             'contact_id' => $contact3->id,
             'assigned_agent_id' => null,

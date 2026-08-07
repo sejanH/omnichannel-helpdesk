@@ -5,32 +5,35 @@
 @section('content')
         <!-- VIEW 1: TICKETS & CHAT WORKSPACE -->
         <div id="view-tickets-workspace" class="flex-1 flex overflow-hidden">
-            <!-- Ticket Inbox List (Column 1) -->
-            <section class="w-96 border-r border-slate-800 bg-slate-900/50 flex flex-col shrink-0">
+                    <!-- Ticket Inbox List (Column 1) -->
+            <section id="inbox-column" class="w-full md:w-96 border-r border-slate-200 bg-white flex flex-col shrink-0">
                 <!-- Header Search & Filter -->
-                <div class="p-4 border-b border-slate-800 space-y-3">
+                <div class="p-4 border-b border-slate-200 bg-white space-y-3">
                     <div class="flex items-center justify-between">
-                        <h2 class="font-bold text-base text-slate-100">Conversations</h2>
+                        <h2 class="font-bold text-base text-slate-900">Conversations</h2>
                         <span
-                            class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Sync Active
+                            class="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 font-mono flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Sync Active
                         </span>
                     </div>
                     <input type="text" id="search-tickets" placeholder="Search customer, ticket # or text..."
-                        class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
-                    <select id="filter-tickets" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 transition shadow-2xs">
+                    <select id="filter-tickets" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 transition shadow-2xs">
                         <option value="all">All Conversations</option>
                         <option value="mine">Assigned to Me</option>
                         <option value="unread">Unread / New</option>
                         <option value="open">Open / In Progress</option>
                         <option value="resolved">Resolved / Closed</option>
+                        @if(auth()->check() && auth()->user()->role === 'admin')
+                            <option value="trash">Trash Bin (Deleted)</option>
+                        @endif
                     </select>
                 </div>
 
                 <!-- Tickets Stream -->
-                <div id="tickets-list" class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
+                <div id="tickets-list" class="flex-1 overflow-y-auto divide-y divide-slate-100 bg-white">
                     @forelse($tickets as $ticket)
-                        <div class="ticket-card p-4 hover:bg-slate-800/40 cursor-pointer transition border-l-4 border-transparent"
+                        <div class="ticket-card p-4 hover:bg-slate-50/80 cursor-pointer transition border-l-4 border-transparent"
                             data-ticket-id="{{ $ticket->id }}"
                             data-status="{{ $ticket->status }}"
                             data-assigned-id="{{ $ticket->assigned_agent_id }}"
@@ -41,34 +44,34 @@
                                 </span>
                                 <div class="flex items-center gap-1.5">
                                     @if($ticket->unread_messages_count > 0)
-                                        <span class="unread-badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
+                                        <span class="unread-badge bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
                                             {{ $ticket->unread_messages_count }} New
                                         </span>
                                     @endif
                                     @if($ticket->status === 'resolved')
-                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✓ Resolved</span>
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Resolved</span>
                                     @elseif($ticket->status === 'closed')
-                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-slate-700/50 text-slate-400 border border-slate-600/30">Closed</span>
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-slate-100 text-slate-600 border border-slate-200">Closed</span>
                                     @elseif($ticket->status === 'in_progress')
-                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">In Progress</span>
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-blue-50 text-blue-700 border border-blue-200">In Progress</span>
                                     @elseif($ticket->status === 'pending')
-                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">Pending</span>
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200">Pending</span>
                                     @else
-                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Open</span>
+                                        <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">Open</span>
                                     @endif
                                     <span class="badge-priority priority-{{ $ticket->priority }}">
                                         {{ $ticket->priority }}
                                     </span>
                                 </div>
                             </div>
-                            <h3 class="font-semibold text-sm text-slate-200 line-clamp-1 mb-1">{{ $ticket->subject }}</h3>
-                            <p class="ticket-snippet-text text-xs text-slate-400 line-clamp-1 mb-2">
+                            <h3 class="font-bold text-sm text-slate-900 line-clamp-1 mb-1">{{ $ticket->subject }}</h3>
+                            <p class="ticket-snippet-text text-xs text-slate-500 line-clamp-1 mb-2">
                                 {{ $ticket->latestMessage->content ?? 'No messages yet.' }}
                             </p>
                             <div class="flex items-center justify-between text-xs text-slate-500">
                                 <span
-                                    class="font-medium text-slate-400">{{ $ticket->contact->name ?? 'Unknown Contact' }}</span>
-                                <span class="ticket-time-text">{{ $ticket->updated_at->diffForHumans() }}</span>
+                                    class="font-semibold text-slate-700">{{ $ticket->contact->name ?? 'Unknown Contact' }}</span>
+                                <span class="ticket-time-text text-[11px] text-slate-400">{{ $ticket->updated_at->diffForHumans() }}</span>
                             </div>
                         </div>
                     @empty
@@ -80,45 +83,79 @@
             </section>
 
             <!-- Active Chat Window (Column 2) -->
-            <section class="flex-1 flex flex-col bg-slate-950">
-                <!-- Active Ticket Top Bar -->
-                <div id="chat-header"
-                    class="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-indigo-400">
-                            TCK
+            <section id="chat-column" class="w-full md:flex-1 hidden md:flex flex-col bg-slate-100/70">
+                <!-- Active Ticket Top Bar (Multi-Row Responsive Layout) -->
+                <div id="chat-header" class="p-3.5 sm:p-4 border-b border-slate-200 bg-white space-y-3 shadow-2xs">
+                    <!-- Row 1: Mobile Back Button, Contact Avatar & Action Controls -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <button type="button" id="mobile-back-to-inbox" class="md:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer" title="Back to Conversations">
+                                <x-icon name="arrow-left" class="text-lg" />
+                            </button>
+                            <div class="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center font-bold text-indigo-600 text-xs shrink-0 shadow-2xs">
+                                TCK
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                    <span id="active-contact-name">Customer</span>
+                                </div>
+                                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                                    <span id="active-channel-name" class="text-indigo-600 font-semibold">Web Chat</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 id="active-ticket-subject" class="font-bold text-slate-100 text-base">Select a
-                                    conversation</h2>
-                                <span id="active-ticket-number"
-                                    class="text-xs font-mono text-slate-400">#TCK-1001</span>
-                                <span id="active-ticket-rating" class="hidden px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30"></span>
+
+                        <!-- Action Buttons Group -->
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs text-slate-500 font-medium hidden sm:inline">Assignee:</span>
+                                <select id="assign-agent-select" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 transition shadow-2xs font-medium max-w-[130px] sm:max-w-none">
+                                    <option value="">Unassigned</option>
+                                    @foreach($agents as $agent)
+                                        <option value="{{ $agent->id }}">{{ $agent->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <div class="text-xs text-slate-400 flex items-center gap-2">
-                                <span id="active-contact-name">Customer</span>
-                                <span>•</span>
-                                <span id="active-channel-name" class="text-indigo-400">Web Chat</span>
-                            </div>
+                            <button id="btn-mark-resolved"
+                                class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 transition cursor-pointer shrink-0">
+                                Mark Resolved
+                            </button>
+                            @if(auth()->check() && auth()->user()->role === 'admin')
+                                <button type="button" id="btn-delete-ticket" class="hidden px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition cursor-pointer shrink-0" title="Move to Trash Bin">
+                                    <x-icon name="trash" class="text-xs inline" />
+                                    <span>Delete</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
+
+                    <!-- Row 2: Ticket Subject, Ticket #, SLA status & Ratings -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <h2 id="active-ticket-subject" class="font-extrabold text-slate-900 text-base sm:text-lg tracking-tight">Select a conversation</h2>
+                            <span id="active-ticket-number" class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">#TCK-1001</span>
+                            <span id="active-sla-pill" class="hidden"></span>
+                            <span id="active-ticket-rating" class="hidden px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trashed Ticket Alert Banner -->
+                <div id="trashed-banner" class="hidden bg-rose-50 border-b border-rose-200 p-3 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-rose-800 font-medium">
                     <div class="flex items-center gap-2">
-                        <div class="flex items-center gap-1.5 mr-2">
-                            <span class="text-xs text-slate-400 font-medium hidden sm:inline">Assignee:</span>
-                            <select id="assign-agent-select" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition">
-                                <option value="">Unassigned</option>
-                                @foreach($agents as $agent)
-                                    <option value="{{ $agent->id }}">{{ $agent->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <button id="btn-mark-resolved"
-                            class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/30 transition">
-                            Mark Resolved
-                        </button>
+                        <x-icon name="alert-triangle" class="text-base text-rose-600 shrink-0" />
+                        <span>This ticket is in the <strong>Trash Bin</strong>.</span>
                     </div>
+                    @if(auth()->check() && auth()->user()->role === 'admin')
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" id="btn-restore-ticket" class="px-3 py-1 bg-white hover:bg-slate-50 text-indigo-700 text-xs font-bold rounded-lg border border-slate-200 transition cursor-pointer shadow-2xs">
+                                Restore Ticket
+                            </button>
+                            <button type="button" id="btn-force-delete-ticket" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-2xs">
+                                Delete Permanently
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Messages Stream Area -->
@@ -129,13 +166,13 @@
                 </div>
 
                 <!-- Chat Reply Input & Quick Responses -->
-                <div class="p-4 border-t border-slate-800 bg-slate-900/90 space-y-3">
+                <div class="p-4 border-t border-slate-200 bg-white space-y-3 shadow-sm">
                     <!-- Canned Responses Quick Toolbar -->
                     <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-                        <span class="text-slate-400 font-medium shrink-0">Canned:</span>
+                        <span class="text-slate-500 font-medium shrink-0">Canned:</span>
                         @foreach($cannedResponses as $response)
                             <button type="button"
-                                class="btn-canned shrink-0 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-md border border-slate-700 transition"
+                                class="btn-canned shrink-0 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-indigo-700 font-semibold rounded-md border border-slate-200 transition cursor-pointer"
                                 data-content="{{ $response->content }}">
                                 {{ $response->shortcut }}
                             </button>
@@ -148,20 +185,20 @@
                         <div class="relative">
                             <textarea id="message-input" rows="3"
                                 placeholder="Type your response... (Press Enter to send, Shift+Enter or Ctrl/Cmd+Enter for new line)"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 transition resize-none shadow-2xs"></textarea>
                         </div>
                         <div class="flex items-center justify-between">
-                            <label class="flex items-center gap-2 text-xs text-amber-400 font-medium cursor-pointer">
+                            <label class="flex items-center gap-2 text-xs text-amber-700 font-semibold cursor-pointer">
                                 <input type="checkbox" id="is-internal-note"
-                                    class="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500">
+                                    class="rounded bg-white border-slate-300 text-amber-600 focus:ring-amber-500">
                                 Internal Note (Only visible to agents)
                             </label>
                             <div class="flex items-center gap-3">
-                                <span class="text-[10px] text-slate-500 hidden md:inline">
-                                    Press <kbd class="px-1 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-400 font-mono text-[9px]">Enter</kbd> to send, <kbd class="px-1 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-400 font-mono text-[9px]">Shift+Enter</kbd> for new line
+                                <span class="text-[10px] text-slate-400 hidden md:inline">
+                                    Press <kbd class="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-600 font-mono text-[9px]">Enter</kbd> to send, <kbd class="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-600 font-mono text-[9px]">Shift+Enter</kbd> for new line
                                 </span>
                                 <button type="submit"
-                                    class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+                                    class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center gap-2 cursor-pointer">
                                     <span>Send Reply</span>
                                     <x-icon name="send" class="text-sm" />
                                 </button>
@@ -702,7 +739,7 @@
                 const priority = t.priority || 'medium';
 
                 return `
-                    <div class="ticket-card p-4 hover:bg-slate-800/40 cursor-pointer transition border-l-4 border-transparent bg-indigo-950/30 border-indigo-500/50 shadow-lg"
+                    <div class="ticket-card p-4 hover:bg-slate-50 cursor-pointer transition border-l-4 border-transparent bg-white border-b border-slate-100 shadow-2xs"
                         data-ticket-id="${t.id}"
                         data-status="${t.status}"
                         data-assigned-id="${t.assigned_agent_id || ''}"
@@ -712,10 +749,10 @@
                                 ${channelName}
                             </span>
                             <div class="flex items-center gap-1.5">
-                                <span class="unread-badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
+                                <span class="unread-badge bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-xs">
                                     New
                                 </span>
-                                <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <span class="ticket-status-pill px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
                                     Open
                                 </span>
                                 <span class="badge-priority priority-${priority}">
@@ -723,12 +760,12 @@
                                 </span>
                             </div>
                         </div>
-                        <h3 class="font-semibold text-sm text-slate-200 line-clamp-1 mb-1">${t.subject}</h3>
-                        <p class="ticket-snippet-text text-xs text-slate-400 line-clamp-1 mb-2">
+                        <h3 class="font-bold text-sm text-slate-900 line-clamp-1 mb-1">${t.subject}</h3>
+                        <p class="ticket-snippet-text text-xs text-slate-500 line-clamp-1 mb-2">
                             ${snippet}
                         </p>
                         <div class="flex items-center justify-between text-xs text-slate-500">
-                            <span class="font-medium text-slate-400">${contactName}</span>
+                            <span class="font-medium text-slate-700">${contactName}</span>
                             <span class="ticket-time-text">Just now</span>
                         </div>
                     </div>

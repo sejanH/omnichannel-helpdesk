@@ -23,6 +23,7 @@ class OmnichannelController extends Controller
             'open_tickets' => Ticket::where('status', 'open')->count(),
             'resolved_tickets' => Ticket::where('status', 'resolved')->count(),
             'total_contacts' => Contact::count(),
+            'trashed_tickets' => auth()->check() && auth()->user()->role === 'admin' ? Ticket::onlyTrashed()->count() : 0,
         ];
 
         // Chart data: tickets by channel
@@ -37,38 +38,52 @@ class OmnichannelController extends Controller
     /**
      * Agent Workspace Tickets
      */
-    public function tickets(?Ticket $ticket = null)
+    public function tickets(Request $request, ?Ticket $ticket = null)
     {
-        $tickets = Ticket::with(['channel', 'contact', 'latestMessage', 'assignedAgent'])
-            ->withCount(['messages as unread_messages_count' => function ($query) {
-                $query->whereNull('read_at')->where('sender_type', 'customer');
-            }])
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $filter = $request->query('filter');
+
+        $query = Ticket::with(['channel', 'contact', 'latestMessage', 'assignedAgent'])
+            ->withCount(['messages as unread_messages_count' => function ($q) {
+                $q->whereNull('read_at')->where('sender_type', 'customer');
+            }]);
+
+        if ($filter === 'trash') {
+            if (!auth()->check() || auth()->user()->role !== 'admin') {
+                abort(403, 'Unauthorized. Only administrators can access the ticket trash bin.');
+            }
+            $query->onlyTrashed();
+        }
+
+        $tickets = $query->orderBy('updated_at', 'desc')->get();
 
         $channels = Channel::all();
         $agents = User::all();
         $cannedResponses = CannedResponse::all();
+        $trashedCount = auth()->check() && auth()->user()->role === 'admin' ? Ticket::onlyTrashed()->count() : 0;
 
         $activeTicket = $ticket;
 
-        return view('tickets', compact('tickets', 'channels', 'agents', 'cannedResponses', 'activeTicket'));
+        return view('tickets', compact('tickets', 'channels', 'agents', 'cannedResponses', 'activeTicket', 'trashedCount'));
     }
 
     /**
      * Fetch Messages for a specific ticket
      */
-    public function getMessages(Ticket $ticket)
+    public function getMessages($id)
     {
-        $ticket->load(['channel', 'contact', 'assignedAgent']);
+        $ticket = Ticket::withTrashed()->with(['channel', 'contact', 'assignedAgent'])->findOrFail($id);
         
-        // Mark unread customer messages as read
-        $ticket->messages()->whereNull('read_at')->where('sender_type', 'customer')->update(['read_at' => now()]);
+        // Mark unread customer messages as read if ticket is active
+        if (!$ticket->trashed()) {
+            $ticket->messages()->whereNull('read_at')->where('sender_type', 'customer')->update(['read_at' => now()]);
+        }
 
         $messages = $ticket->messages()->orderBy('created_at', 'asc')->get();
 
         return response()->json([
             'ticket' => $ticket,
+            'sla_status' => $ticket->sla_status,
+            'is_trashed' => $ticket->trashed(),
             'messages' => $messages,
         ]);
     }
@@ -78,6 +93,10 @@ class OmnichannelController extends Controller
      */
     public function sendMessage(Request $request, Ticket $ticket)
     {
+        if ($ticket->trashed()) {
+            return response()->json(['error' => 'Cannot send messages on trashed tickets.'], 422);
+        }
+
         $request->validate([
             'content' => 'required|string',
             'is_internal_note' => 'boolean',
@@ -119,6 +138,10 @@ class OmnichannelController extends Controller
      */
     public function resolveTicket(Ticket $ticket)
     {
+        if ($ticket->trashed()) {
+            return response()->json(['error' => 'Cannot resolve trashed tickets.'], 422);
+        }
+
         $newStatus = in_array($ticket->status, ['resolved', 'closed']) ? 'open' : 'resolved';
 
         $ticket->update([
@@ -173,5 +196,86 @@ class OmnichannelController extends Controller
             'ticket' => $ticket->load(['assignedAgent']),
             'message' => $message
         ]);
+    }
+
+    /**
+     * Update ticket category, priority, and tags
+     */
+    public function updateTicketMetadata(Request $request, Ticket $ticket)
+    {
+        $validated = $request->validate([
+            'category' => 'nullable|string|max:100',
+            'priority' => 'nullable|in:low,medium,high,urgent',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+        ]);
+
+        if (isset($validated['category'])) {
+            $ticket->category = $validated['category'];
+        }
+
+        if (isset($validated['priority'])) {
+            $ticket->priority = $validated['priority'];
+            $policy = \App\Models\SlaPolicy::where('priority', $validated['priority'])->first();
+            if ($policy) {
+                $ticket->due_at = now()->addMinutes($policy->resolution_target_minutes);
+            }
+        }
+
+        if (isset($validated['tags'])) {
+            $ticket->tags = array_values(array_unique($validated['tags']));
+        }
+
+        $ticket->save();
+
+        return response()->json([
+            'success' => true,
+            'ticket' => $ticket,
+            'sla_status' => $ticket->sla_status,
+        ]);
+    }
+
+    /**
+     * Move Ticket to Trash Bin (Admin Only)
+     */
+    public function destroyTicket(Ticket $ticket)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can delete tickets.');
+        }
+
+        $ticket->delete();
+
+        return response()->json(['success' => true, 'message' => 'Ticket moved to trash bin successfully.']);
+    }
+
+    /**
+     * Restore Ticket from Trash Bin (Admin Only)
+     */
+    public function restoreTicket($id)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can restore trashed tickets.');
+        }
+
+        $ticket = Ticket::onlyTrashed()->findOrFail($id);
+        $ticket->restore();
+
+        return response()->json(['success' => true, 'message' => 'Ticket restored successfully.']);
+    }
+
+    /**
+     * Permanently Delete Ticket (Admin Only)
+     */
+    public function forceDeleteTicket($id)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can permanently delete tickets.');
+        }
+
+        $ticket = Ticket::onlyTrashed()->findOrFail($id);
+        $ticket->forceDelete();
+
+        return response()->json(['success' => true, 'message' => 'Ticket permanently deleted.']);
     }
 }

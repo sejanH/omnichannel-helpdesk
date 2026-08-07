@@ -12,10 +12,14 @@ use Illuminate\Support\Facades\Auth;
 class BillingController extends Controller
 {
     /**
-     * Display Subscription & Billing Dashboard
+     * Display Subscription & Billing Dashboard (Admin Only)
      */
     public function index()
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Subscription and billing management is restricted to administrators only.');
+        }
+
         $user = Auth::user();
         $subscription = $user->getOrProvisionSubscription();
 
@@ -28,10 +32,14 @@ class BillingController extends Controller
     }
 
     /**
-     * Update Subscription Plan & Payment Method (Stripe Checkout / Direct Update)
+     * Update Subscription Plan & Payment Method (Admin Only)
      */
     public function updatePlan(Request $request)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can change the subscription plan.');
+        }
+
         $request->validate([
             'plan' => 'required|in:starter,pro,enterprise',
             'card_name' => 'nullable|string',
@@ -78,10 +86,14 @@ class BillingController extends Controller
     }
 
     /**
-     * Cancel Subscription
+     * Cancel Subscription (Admin Only)
      */
     public function cancel()
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can cancel the subscription.');
+        }
+
         $user = Auth::user();
         $subscription = $user->getOrProvisionSubscription();
 
@@ -96,10 +108,14 @@ class BillingController extends Controller
     }
 
     /**
-     * Resume Subscription
+     * Resume Subscription (Admin Only)
      */
     public function resume()
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can resume the subscription.');
+        }
+
         $user = Auth::user();
         $subscription = $user->getOrProvisionSubscription();
 
@@ -114,7 +130,7 @@ class BillingController extends Controller
     }
 
     /**
-     * Handle Automated Stripe Webhook Events
+     * Handle Automated Stripe Webhook Events (Public Endpoint)
      */
     public function stripeWebhook(Request $request)
     {
@@ -144,10 +160,14 @@ class BillingController extends Controller
     }
 
     /**
-     * Verify and Activate License Key
+     * Verify and Activate License Key (Admin Only)
      */
     public function verifyLicense(Request $request)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Only administrators can activate license keys.');
+        }
+
         $request->validate([
             'license_key' => 'required|string',
         ]);

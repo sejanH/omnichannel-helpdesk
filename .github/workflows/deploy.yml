@@ -1,0 +1,73 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main # Change to 'master' if that's your primary branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Change to your server's PHP version
+          tools: composer:v2
+
+      - name: 📦 Install Composer Dependencies
+        run: composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install NPM Dependencies & Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: 📂 Sync files to server
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_PORT: ${{ secrets.REMOTE_PORT || 22 }}
+          TARGET: ${{ secrets.REMOTE_TARGET_DIR }} # e.g. /var/www/omnichannel-helpdesk
+          # Exclude files that shouldn't be overwritten on the server
+          EXCLUDE: "/.git/, /.github/, /node_modules/, /storage/, /.env, /tests/, /phpunit.xml"
+
+      - name: 🚀 Run Artisan Commands on Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.REMOTE_PORT || 22 }}
+          script: |
+            cd ${{ secrets.REMOTE_TARGET_DIR }}
+            
+            # Ensure permissions are correct (optional, adjust user/group as needed)
+            # sudo chown -R www-data:www-data .
+            # sudo chmod -R 775 storage bootstrap/cache
+            
+            # Clear caches
+            php artisan optimize:clear
+            
+            # Run Migrations
+            php artisan migrate --force
+            
+            # Re-cache everything for production
+            php artisan config:cache
+            php artisan event:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # Restart queue workers (if you are using Horizon or queue workers)
+            php artisan queue:restart
