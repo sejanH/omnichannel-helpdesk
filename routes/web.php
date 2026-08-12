@@ -75,6 +75,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CannedResponseController;
+use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WidgetBuilderController;
 
@@ -85,6 +86,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/tickets/{ticket?}', [OmnichannelController::class, 'tickets'])->name('tickets');
     Route::patch('/tickets/{ticket}/resolve', [OmnichannelController::class, 'resolveTicket'])->name('tickets.resolve');
     Route::patch('/tickets/{ticket}/assign', [OmnichannelController::class, 'assignAgent'])->name('tickets.assign');
+
+    // Omnichannel Channels & Integration Configurations (Admin Only)
+    Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');
+    Route::post('/channels', [ChannelController::class, 'store'])->name('channels.store');
+    Route::put('/channels/{channel}', [ChannelController::class, 'update'])->name('channels.update');
+    Route::post('/channels/{channel}/toggle', [ChannelController::class, 'toggleStatus'])->name('channels.toggle');
 
     // Subscription & Billing Routes
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
@@ -159,6 +166,7 @@ Route::prefix('api/v1/webhooks')->group(function () {
     Route::match(['get', 'post'], '/whatsapp', [WebhookController::class, 'handleWhatsApp']);
     Route::post('/telegram', [WebhookController::class, 'handleTelegram']);
     Route::match(['get', 'post'], '/facebook', [WebhookController::class, 'handleFacebook']);
+    Route::match(['get', 'post'], '/instagram', [WebhookController::class, 'handleInstagram']);
 });
 
 // Error Pages Preview Route

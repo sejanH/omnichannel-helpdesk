@@ -30,6 +30,11 @@ return new class extends Migration
         // Remove billing columns from users table to keep it clean
         Schema::table('users', function (Blueprint $table) {
             if (Schema::hasColumn('users', 'stripe_id')) {
+                try {
+                    $table->dropIndex(['stripe_id']);
+                } catch (\Throwable $e) {
+                    // Index might not exist or already dropped
+                }
                 $table->dropColumn([
                     'stripe_id',
                     'pm_type',

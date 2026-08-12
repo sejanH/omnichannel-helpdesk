@@ -118,6 +118,21 @@ class OmnichannelSeeder extends Seeder
             ]
         );
 
+        $instagramChannel = Channel::firstOrCreate(
+            ['slug' => 'instagram-direct'],
+            [
+                'name' => 'Instagram Direct',
+                'type' => 'instagram',
+                'icon' => 'brand-instagram',
+                'is_active' => true,
+                'configuration' => [
+                    'instagram_account_id' => '178414092817263',
+                    'page_access_token' => 'EAAI_SAMPLE_INSTAGRAM_TOKEN',
+                    'verify_token' => 'omnihelp_secret',
+                ],
+            ]
+        );
+
         $telegramChannel = Channel::firstOrCreate(
             ['slug' => 'telegram-bot'],
             [

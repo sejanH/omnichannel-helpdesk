@@ -36,6 +36,11 @@ class SendExternalMessageJob implements ShouldQueue
             if (!empty($psid)) {
                 app(\App\Services\FacebookService::class)->sendMessage($psid, $this->message->content);
             }
+        } elseif ($channelType === 'instagram') {
+            $igsid = str_replace('instagram:', '', $this->contact->notes ?? '');
+            if (!empty($igsid)) {
+                app(\App\Services\InstagramService::class)->sendMessage($igsid, $this->message->content);
+            }
         }
     }
 }

@@ -149,7 +149,7 @@ class WebhookController extends Controller
             $psid = (string) $entry['sender']['id'];
             $content = $entry['message']['text'] ?? '[Media Message]';
 
-            $channel = Channel::firstOrCreate(['type' => 'facebook'], ['name' => 'Facebook Messenger']);
+            $channel = Channel::firstOrCreate(['type' => 'facebook'], ['name' => 'Facebook Messenger', 'slug' => 'facebook-messenger']);
             $contact = Contact::firstOrCreate(['notes' => 'facebook:' . $psid], [
                 'name' => 'FB User (' . substr($psid, -4) . ')',
                 'channel_id' => $channel->id,
@@ -163,6 +163,64 @@ class WebhookController extends Controller
             ], [
                 'ticket_number' => 'TCK-' . rand(1000, 9999),
                 'subject' => 'Facebook Chat from ' . $contact->name,
+                'priority' => 'medium',
+                'last_activity_at' => now(),
+            ]);
+
+            $message = Message::create([
+                'ticket_id' => $ticket->id,
+                'sender_type' => 'customer',
+                'sender_id' => $contact->id,
+                'sender_name' => $contact->name,
+                'content' => $content,
+            ]);
+
+            broadcast(new MessageSent($message))->toOthers();
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
+    /**
+     * Handle Instagram Direct Webhook Verification (GET) & Incoming Direct Messages (POST)
+     */
+    public function handleInstagram(Request $request)
+    {
+        if ($request->isMethod('get')) {
+            $config = Channel::getCachedConfig('instagram');
+            $verifyToken = $config['verify_token'] ?? env('INSTAGRAM_VERIFY_TOKEN', 'omnihelp_secret');
+            $mode = $request->query('hub_mode');
+            $token = $request->query('hub_verify_token');
+            $challenge = $request->query('hub_challenge');
+
+            if ($mode === 'subscribe' && $token === $verifyToken) {
+                return response($challenge, 200);
+            }
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        $payload = $request->all();
+        Log::info('Incoming Instagram Direct Webhook:', $payload);
+
+        $entry = $payload['entry'][0]['messaging'][0] ?? null;
+        if ($entry && isset($entry['message'])) {
+            $igsid = (string) $entry['sender']['id'];
+            $content = $entry['message']['text'] ?? '[Media Message]';
+
+            $channel = Channel::firstOrCreate(['type' => 'instagram'], ['name' => 'Instagram Direct', 'slug' => 'instagram-direct']);
+            $contact = Contact::firstOrCreate(['notes' => 'instagram:' . $igsid], [
+                'name' => 'IG User (' . substr($igsid, -4) . ')',
+                'channel_id' => $channel->id,
+                'email' => 'ig_' . $igsid . '@instagram.user',
+            ]);
+
+            $ticket = Ticket::firstOrCreate([
+                'contact_id' => $contact->id,
+                'channel_id' => $channel->id,
+                'status' => 'open',
+            ], [
+                'ticket_number' => 'TCK-' . rand(1000, 9999),
+                'subject' => 'Instagram DM from ' . $contact->name,
                 'priority' => 'medium',
                 'last_activity_at' => now(),
             ]);

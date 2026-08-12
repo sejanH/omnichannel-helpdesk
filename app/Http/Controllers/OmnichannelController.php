@@ -23,7 +23,7 @@ class OmnichannelController extends Controller
             'open_tickets' => Ticket::where('status', 'open')->count(),
             'resolved_tickets' => Ticket::where('status', 'resolved')->count(),
             'total_contacts' => Contact::count(),
-            'trashed_tickets' => auth()->check() && auth()->user()->role === 'admin' ? Ticket::onlyTrashed()->count() : 0,
+            'trashed_tickets' => auth()->check() && auth()->user()->hasPermissionTo('delete-tickets') ? Ticket::onlyTrashed()->count() : 0,
         ];
 
         // Chart data: tickets by channel
@@ -48,8 +48,8 @@ class OmnichannelController extends Controller
             }]);
 
         if ($filter === 'trash') {
-            if (!auth()->check() || auth()->user()->role !== 'admin') {
-                abort(403, 'Unauthorized. Only administrators can access the ticket trash bin.');
+            if (!auth()->check() || !auth()->user()->hasPermissionTo('delete-tickets')) {
+                abort(403, 'Unauthorized. You do not have permission to access the ticket trash bin.');
             }
             $query->onlyTrashed();
         }
@@ -59,7 +59,7 @@ class OmnichannelController extends Controller
         $channels = Channel::all();
         $agents = User::all();
         $cannedResponses = CannedResponse::all();
-        $trashedCount = auth()->check() && auth()->user()->role === 'admin' ? Ticket::onlyTrashed()->count() : 0;
+        $trashedCount = auth()->check() && auth()->user()->hasPermissionTo('delete-tickets') ? Ticket::onlyTrashed()->count() : 0;
 
         $activeTicket = $ticket;
 
@@ -123,7 +123,7 @@ class OmnichannelController extends Controller
             $channelType = strtolower($ticket->channel->type ?? '');
             $contact = $ticket->contact;
 
-            if ($contact && in_array($channelType, ['whatsapp', 'telegram', 'facebook'])) {
+            if ($contact && in_array($channelType, ['whatsapp', 'telegram', 'facebook', 'instagram'])) {
                 \App\Jobs\SendExternalMessageJob::dispatch($message, $channelType, $contact);
             }
         }
@@ -248,12 +248,12 @@ class OmnichannelController extends Controller
     }
 
     /**
-     * Move Ticket to Trash Bin (Admin Only)
+     * Move Ticket to Trash Bin
      */
     public function destroyTicket(Ticket $ticket)
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Only administrators can delete tickets.');
+        if (!auth()->check() || !auth()->user()->hasPermissionTo('delete-tickets')) {
+            abort(403, 'Unauthorized. You do not have permission to delete tickets.');
         }
 
         $ticket->delete();
@@ -262,12 +262,12 @@ class OmnichannelController extends Controller
     }
 
     /**
-     * Restore Ticket from Trash Bin (Admin Only)
+     * Restore Ticket from Trash Bin
      */
     public function restoreTicket($id)
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Only administrators can restore trashed tickets.');
+        if (!auth()->check() || !auth()->user()->hasPermissionTo('delete-tickets')) {
+            abort(403, 'Unauthorized. You do not have permission to restore trashed tickets.');
         }
 
         $ticket = Ticket::onlyTrashed()->findOrFail($id);
@@ -277,12 +277,12 @@ class OmnichannelController extends Controller
     }
 
     /**
-     * Permanently Delete Ticket (Admin Only)
+     * Permanently Delete Ticket
      */
     public function forceDeleteTicket($id)
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Only administrators can permanently delete tickets.');
+        if (!auth()->check() || !auth()->user()->hasPermissionTo('delete-tickets')) {
+            abort(403, 'Unauthorized. You do not have permission to permanently delete tickets.');
         }
 
         $ticket = Ticket::onlyTrashed()->findOrFail($id);

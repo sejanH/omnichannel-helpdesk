@@ -29,7 +29,12 @@ class PermissionSeeder extends Seeder
         }
 
         // 2. Assign Baseline Permissions to Roles
-        // Note: Admin gets everything automatically via the `hasPermissionTo` override, so no need to attach.
+        $adminRole = Role::where('slug', 'admin')->first();
+        if ($adminRole) {
+            $allPermissions = Permission::all();
+            $adminRole->permissions()->syncWithoutDetaching($allPermissions);
+        }
+
         $supervisorRole = Role::where('slug', 'supervisor')->first();
         
         if ($supervisorRole) {

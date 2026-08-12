@@ -83,6 +83,12 @@
             @endif
 
             @if(auth()->check() && auth()->user()->isAdmin())
+            <a href="{{ route('channels.index') }}" title="Omnichannel Integrations & Channels"
+                class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('channels.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                <x-icon name="brand-whatsapp" class="text-lg shrink-0 text-emerald-600" />
+                <span class="sidebar-text">Channel Integrations</span>
+            </a>
+
             <a href="{{ route('widget-builder.index') }}" title="Widget Builder Studio"
                 class="nav-link-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-xs transition text-left cursor-pointer {{ request()->routeIs('widget-builder.*') ? 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
                 <x-icon name="adjustments-horizontal" class="text-lg shrink-0" />

@@ -24,7 +24,7 @@
                         <option value="unread">Unread / New</option>
                         <option value="open">Open / In Progress</option>
                         <option value="resolved">Resolved / Closed</option>
-                        @if(auth()->check() && auth()->user()->role === 'admin')
+                        @if(auth()->check() && auth()->user()->hasPermissionTo('delete-tickets'))
                             <option value="trash">Trash Bin (Deleted)</option>
                         @endif
                     </select>
@@ -120,7 +120,7 @@
                                 class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 transition cursor-pointer shrink-0">
                                 Mark Resolved
                             </button>
-                            @if(auth()->check() && auth()->user()->role === 'admin')
+                            @if(auth()->check() && auth()->user()->hasPermissionTo('delete-tickets'))
                                 <button type="button" id="btn-delete-ticket" class="hidden px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition cursor-pointer shrink-0" title="Move to Trash Bin">
                                     <x-icon name="trash" class="text-xs inline" />
                                     <span>Delete</span>
@@ -146,7 +146,7 @@
                         <x-icon name="alert-triangle" class="text-base text-rose-600 shrink-0" />
                         <span>This ticket is in the <strong>Trash Bin</strong>.</span>
                     </div>
-                    @if(auth()->check() && auth()->user()->role === 'admin')
+                    @if(auth()->check() && auth()->user()->hasPermissionTo('delete-tickets'))
                         <div class="flex items-center gap-2 shrink-0">
                             <button type="button" id="btn-restore-ticket" class="px-3 py-1 bg-white hover:bg-slate-50 text-indigo-700 text-xs font-bold rounded-lg border border-slate-200 transition cursor-pointer shadow-2xs">
                                 Restore Ticket
