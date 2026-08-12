@@ -24,23 +24,32 @@ class SendExternalMessageJob implements ShouldQueue
     {
         $channelType = strtolower($this->channelType);
         
+        $channelMessageId = null;
+
         if ($channelType === 'whatsapp' && $this->contact->phone) {
-            app(\App\Services\WhatsAppService::class)->sendMessage($this->contact->phone, $this->message->content);
+            $channelMessageId = app(\App\Services\WhatsAppService::class)->sendMessage($this->contact->phone, $this->message->content);
         } elseif ($channelType === 'telegram') {
             $chatId = str_replace('telegram:', '', $this->contact->notes ?? '');
             if (!empty($chatId)) {
-                app(\App\Services\TelegramService::class)->sendMessage($chatId, $this->message->content);
+                $channelMessageId = app(\App\Services\TelegramService::class)->sendMessage($chatId, $this->message->content);
             }
         } elseif ($channelType === 'facebook') {
             $psid = str_replace('facebook:', '', $this->contact->notes ?? '');
             if (!empty($psid)) {
-                app(\App\Services\FacebookService::class)->sendMessage($psid, $this->message->content);
+                $channelMessageId = app(\App\Services\FacebookService::class)->sendMessage($psid, $this->message->content);
             }
         } elseif ($channelType === 'instagram') {
             $igsid = str_replace('instagram:', '', $this->contact->notes ?? '');
             if (!empty($igsid)) {
-                app(\App\Services\InstagramService::class)->sendMessage($igsid, $this->message->content);
+                $channelMessageId = app(\App\Services\InstagramService::class)->sendMessage($igsid, $this->message->content);
             }
+        }
+
+        if (!empty($channelMessageId)) {
+            $this->message->update([
+                'channel_message_id' => (string) $channelMessageId,
+                'delivered_at' => now(),
+            ]);
         }
     }
 }

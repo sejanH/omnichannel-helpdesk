@@ -78,6 +78,40 @@ class InstagramChannelTest extends TestCase
 
         $this->assertDatabaseHas('messages', [
             'content' => 'Hi, I need help with my Instagram order!',
+            'channel_message_id' => 'm_99281',
+        ]);
+    }
+
+    public function test_echo_instagram_webhook_stores_externally_sent_message()
+    {
+        $payload = [
+            'object' => 'instagram',
+            'entry' => [
+                [
+                    'id' => '178414092817263',
+                    'messaging' => [
+                        [
+                            'sender' => ['id' => '178414092817263'],
+                            'recipient' => ['id' => '10029384756'],
+                            'timestamp' => 1600000005,
+                            'message' => [
+                                'mid' => 'm_echo_8829',
+                                'text' => 'Here is your tracking link: https://example.com/track',
+                                'is_echo' => true,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/v1/webhooks/instagram', $payload);
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('messages', [
+            'content' => 'Here is your tracking link: https://example.com/track',
+            'sender_type' => 'agent',
+            'channel_message_id' => 'm_echo_8829',
         ]);
     }
 }

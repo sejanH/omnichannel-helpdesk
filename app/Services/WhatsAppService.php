@@ -20,11 +20,11 @@ class WhatsAppService
     /**
      * Send outgoing WhatsApp message via Meta Cloud API
      */
-    public function sendMessage(string $toPhone, string $messageText)
+    public function sendMessage(string $toPhone, string $messageText): ?string
     {
         if (empty($this->token) || empty($this->phoneNumberId)) {
             Log::warning("WhatsApp API credentials missing. Skipping outbound API call for recipient: {$toPhone}");
-            return false;
+            return null;
         }
 
         $url = "https://graph.facebook.com/v19.0/{$this->phoneNumberId}/messages";
@@ -40,6 +40,12 @@ class WhatsAppService
             ],
         ]);
 
-        return $response->successful();
+        if ($response->successful()) {
+            $msgId = $response->json('messages.0.id');
+            return $msgId ? (string)$msgId : 'wamid_sent_' . uniqid();
+        }
+
+        Log::error('WhatsApp API send message failed:', ['body' => $response->body()]);
+        return null;
     }
 }

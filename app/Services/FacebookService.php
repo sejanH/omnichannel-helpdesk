@@ -18,11 +18,11 @@ class FacebookService
     /**
      * Send outgoing Facebook Messenger message via Meta Graph API
      */
-    public function sendMessage(string $recipientPsid, string $messageText)
+    public function sendMessage(string $recipientPsid, string $messageText): ?string
     {
         if (empty($this->pageAccessToken)) {
             Log::warning("Facebook Page Access Token missing. Skipping outbound call for PSID: {$recipientPsid}");
-            return false;
+            return null;
         }
 
         $url = "https://graph.facebook.com/v19.0/me/messages?access_token={$this->pageAccessToken}";
@@ -32,6 +32,12 @@ class FacebookService
             'message' => ['text' => $messageText],
         ]);
 
-        return $response->successful();
+        if ($response->successful()) {
+            $msgId = $response->json('message_id');
+            return $msgId ? (string)$msgId : 'fb_mid_' . uniqid();
+        }
+
+        Log::error('Facebook Messenger API send message failed:', ['body' => $response->body()]);
+        return null;
     }
 }

@@ -18,11 +18,11 @@ class InstagramService
     /**
      * Send outgoing Instagram Direct message via Meta Graph API
      */
-    public function sendMessage(string $recipientIgsid, string $messageText)
+    public function sendMessage(string $recipientIgsid, string $messageText): ?string
     {
         if (empty($this->pageAccessToken)) {
             Log::warning("Instagram Page Access Token missing. Skipping outbound API call for IGSID: {$recipientIgsid}");
-            return false;
+            return null;
         }
 
         $url = "https://graph.facebook.com/v19.0/me/messages?access_token={$this->pageAccessToken}";
@@ -32,6 +32,12 @@ class InstagramService
             'message' => ['text' => $messageText],
         ]);
 
-        return $response->successful();
+        if ($response->successful()) {
+            $msgId = $response->json('message_id');
+            return $msgId ? (string)$msgId : 'ig_mid_' . uniqid();
+        }
+
+        Log::error('Instagram Direct API send message failed:', ['body' => $response->body()]);
+        return null;
     }
 }
